@@ -3,9 +3,9 @@
 Bu hujjat CRM tizimi uchun kerakli barcha API endpointlarni tavsiflaydi. Backend yaratishda quyidagi API'larni implement qilish kerak.
 
 ## Base URL
-\`\`\`
+```
 https://your-api-domain.com/api/v1
-\`\`\`
+```
 
 ## Authentication
 
@@ -13,15 +13,15 @@ https://your-api-domain.com/api/v1
 Foydalanuvchini tizimga kiritish
 
 **Request Body:**
-\`\`\`json
+```json
 {
   "email": "string",
   "password": "string"
 }
-\`\`\`
+```
 
 **Response:**
-\`\`\`json
+```json
 {
   "success": true,
   "data": {
@@ -35,36 +35,36 @@ Foydalanuvchini tizimga kiritish
     "refreshToken": "string"
   }
 }
-\`\`\`
+```
 
 ### POST /auth/logout
 Foydalanuvchini tizimdan chiqarish
 
 **Headers:**
-\`\`\`
+```
 Authorization: Bearer <token>
-\`\`\`
+```
 
 **Response:**
-\`\`\`json
+```json
 {
   "success": true,
   "message": "Successfully logged out"
 }
-\`\`\`
+```
 
 ### POST /auth/refresh
 Token yangilash
 
 **Request Body:**
-\`\`\`json
+```json
 {
   "refreshToken": "string"
 }
-\`\`\`
+```
 
 **Response:**
-\`\`\`json
+```json
 {
   "success": true,
   "data": {
@@ -72,7 +72,7 @@ Token yangilash
     "refreshToken": "string"
   }
 }
-\`\`\`
+```
 
 ## Customers (Mijozlar)
 
@@ -80,9 +80,9 @@ Token yangilash
 Barcha mijozlarni olish
 
 **Headers:**
-\`\`\`
+```
 Authorization: Bearer <token>
-\`\`\`
+```
 
 **Query Parameters:**
 - `page` (optional): Sahifa raqami (default: 1)
@@ -91,7 +91,7 @@ Authorization: Bearer <token>
 - `status` (optional): Mijoz holati (active, potential, waiting)
 
 **Response:**
-\`\`\`json
+```json
 {
   "success": true,
   "data": {
@@ -116,18 +116,18 @@ Authorization: Bearer <token>
     }
   }
 }
-\`\`\`
+```
 
 ### GET /customers/:id
 Bitta mijozni olish
 
 **Headers:**
-\`\`\`
+```
 Authorization: Bearer <token>
-\`\`\`
+```
 
 **Response:**
-\`\`\`json
+```json
 {
   "success": true,
   "data": {
@@ -144,19 +144,19 @@ Authorization: Bearer <token>
     }
   }
 }
-\`\`\`
+```
 
 ### POST /customers
 Yangi mijoz yaratish
 
 **Headers:**
-\`\`\`
+```
 Authorization: Bearer <token>
 Content-Type: application/json
-\`\`\`
+```
 
 **Request Body:**
-\`\`\`json
+```json
 {
   "name": "string",
   "email": "string",
@@ -165,10 +165,10 @@ Content-Type: application/json
   "status": "active|potential|waiting",
   "value": "string"
 }
-\`\`\`
+```
 
 **Response:**
-\`\`\`json
+```json
 {
   "success": true,
   "data": {
@@ -185,19 +185,19 @@ Content-Type: application/json
     }
   }
 }
-\`\`\`
+```
 
 ### PUT /customers/:id
 Mijozni yangilash
 
 **Headers:**
-\`\`\`
+```
 Authorization: Bearer <token>
 Content-Type: application/json
-\`\`\`
+```
 
 **Request Body:**
-\`\`\`json
+```json
 {
   "name": "string",
   "email": "string",
@@ -206,10 +206,10 @@ Content-Type: application/json
   "status": "active|potential|waiting",
   "value": "string"
 }
-\`\`\`
+```
 
 **Response:**
-\`\`\`json
+```json
 {
   "success": true,
   "data": {
@@ -226,23 +226,23 @@ Content-Type: application/json
     }
   }
 }
-\`\`\`
+```
 
 ### DELETE /customers/:id
 Mijozni o'chirish
 
 **Headers:**
-\`\`\`
+```
 Authorization: Bearer <token>
-\`\`\`
+```
 
 **Response:**
-\`\`\`json
+```json
 {
   "success": true,
   "message": "Customer deleted successfully"
 }
-\`\`\`
+```
 
 ## Deals (Kelishuvlar)
 
@@ -250,9 +250,9 @@ Authorization: Bearer <token>
 Barcha kelishuvlarni olish
 
 **Headers:**
-\`\`\`
+```
 Authorization: Bearer <token>
-\`\`\`
+```
 
 **Query Parameters:**
 - `page` (optional): Sahifa raqami
@@ -261,7 +261,7 @@ Authorization: Bearer <token>
 - `customerId` (optional): Mijoz ID'si
 
 **Response:**
-\`\`\`json
+```json
 {
   "success": true,
   "data": {
@@ -289,19 +289,19 @@ Authorization: Bearer <token>
     }
   }
 }
-\`\`\`
+```
 
 ### POST /deals
 Yangi kelishuv yaratish
 
 **Headers:**
-\`\`\`
+```
 Authorization: Bearer <token>
 Content-Type: application/json
-\`\`\`
+```
 
 **Request Body:**
-\`\`\`json
+```json
 {
   "title": "string",
   "description": "string",
@@ -309,19 +309,19 @@ Content-Type: application/json
   "status": "new|in_progress|completed|cancelled",
   "customerId": "number"
 }
-\`\`\`
+```
 
 ### PUT /deals/:id
 Kelishuvni yangilash
 
 **Headers:**
-\`\`\`
+```
 Authorization: Bearer <token>
 Content-Type: application/json
-\`\`\`
+```
 
 **Request Body:**
-\`\`\`json
+```json
 {
   "title": "string",
   "description": "string",
@@ -329,15 +329,15 @@ Content-Type: application/json
   "status": "new|in_progress|completed|cancelled",
   "customerId": "number"
 }
-\`\`\`
+```
 
 ### DELETE /deals/:id
 Kelishuvni o'chirish
 
 **Headers:**
-\`\`\`
+```
 Authorization: Bearer <token>
-\`\`\`
+```
 
 ## Activities (Faoliyatlar)
 
@@ -345,9 +345,9 @@ Authorization: Bearer <token>
 Barcha faoliyatlarni olish
 
 **Headers:**
-\`\`\`
+```
 Authorization: Bearer <token>
-\`\`\`
+```
 
 **Query Parameters:**
 - `page` (optional): Sahifa raqami
@@ -356,7 +356,7 @@ Authorization: Bearer <token>
 - `customerId` (optional): Mijoz ID'si
 
 **Response:**
-\`\`\`json
+```json
 {
   "success": true,
   "data": {
@@ -375,25 +375,25 @@ Authorization: Bearer <token>
     ]
   }
 }
-\`\`\`
+```
 
 ### POST /activities
 Yangi faoliyat yaratish
 
 **Headers:**
-\`\`\`
+```
 Authorization: Bearer <token>
 Content-Type: application/json
-\`\`\`
+```
 
 **Request Body:**
-\`\`\`json
+```json
 {
   "type": "call|email|meeting|deal",
   "description": "string",
   "customerId": "number"
 }
-\`\`\`
+```
 
 ## Analytics (Analitika)
 
@@ -401,12 +401,12 @@ Content-Type: application/json
 Dashboard statistikalarini olish
 
 **Headers:**
-\`\`\`
+```
 Authorization: Bearer <token>
-\`\`\`
+```
 
 **Response:**
-\`\`\`json
+```json
 {
   "success": true,
   "data": {
@@ -427,15 +427,15 @@ Authorization: Bearer <token>
     ]
   }
 }
-\`\`\`
+```
 
 ### GET /analytics/sales
 Sotuv analitikasi
 
 **Headers:**
-\`\`\`
+```
 Authorization: Bearer <token>
-\`\`\`
+```
 
 **Query Parameters:**
 - `startDate` (optional): Boshlanish sanasi (YYYY-MM-DD)
@@ -443,7 +443,7 @@ Authorization: Bearer <token>
 - `period` (optional): Davr (daily, weekly, monthly, yearly)
 
 **Response:**
-\`\`\`json
+```json
 {
   "success": true,
   "data": {
@@ -464,13 +464,13 @@ Authorization: Bearer <token>
     ]
   }
 }
-\`\`\`
+```
 
 ## Error Responses
 
 Barcha API'lar xatolik holatida quyidagi formatda javob qaytaradi:
 
-\`\`\`json
+```json
 {
   "success": false,
   "error": {
@@ -479,7 +479,7 @@ Barcha API'lar xatolik holatida quyidagi formatda javob qaytaradi:
     "details": "object (optional)"
   }
 }
-\`\`\`
+```
 
 ### Umumiy Xatolik Kodlari:
 - `UNAUTHORIZED` (401): Avtorizatsiya talab qilinadi
@@ -491,7 +491,7 @@ Barcha API'lar xatolik holatida quyidagi formatda javob qaytaradi:
 ## Ma'lumotlar Bazasi Sxemasi
 
 ### Users jadvali
-\`\`\`sql
+```sql
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
   email VARCHAR(255) UNIQUE NOT NULL,
@@ -501,10 +501,10 @@ CREATE TABLE users (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-\`\`\`
+```
 
 ### Customers jadvali
-\`\`\`sql
+```sql
 CREATE TABLE customers (
   id SERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
@@ -517,10 +517,10 @@ CREATE TABLE customers (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-\`\`\`
+```
 
 ### Deals jadvali
-\`\`\`sql
+```sql
 CREATE TABLE deals (
   id SERIAL PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
@@ -532,10 +532,10 @@ CREATE TABLE deals (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-\`\`\`
+```
 
 ### Activities jadvali
-\`\`\`sql
+```sql
 CREATE TABLE activities (
   id SERIAL PRIMARY KEY,
   type VARCHAR(50) NOT NULL,
@@ -544,7 +544,7 @@ CREATE TABLE activities (
   user_id INTEGER REFERENCES users(id),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-\`\`\`
+```
 
 ## Xavfsizlik
 
@@ -558,7 +558,7 @@ CREATE TABLE activities (
 
 Backend quyidagi muhit o'zgaruvchilarini talab qiladi:
 
-\`\`\`env
+```env
 DATABASE_URL=postgresql://username:password@localhost:5432/crm_db
 JWT_SECRET=your-secret-key
 JWT_EXPIRES_IN=24h
@@ -567,6 +567,6 @@ REFRESH_TOKEN_EXPIRES_IN=7d
 PORT=3001
 NODE_ENV=production
 CORS_ORIGIN=https://your-frontend-domain.com
-\`\`\`
+```
 
 Bu API dokumentatsiyasi asosida backend yaratib, frontend bilan bog'lash mumkin.

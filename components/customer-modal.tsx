@@ -37,12 +37,12 @@ interface CustomerModalProps {
 
 export function CustomerModal({ isOpen, onClose, onSave, customer, mode }: CustomerModalProps) {
   const { t } = useLanguage()
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Pick<Customer, "name" | "email" | "phone" | "company" | "status" | "value">>({
     name: "",
     email: "",
     phone: "",
     company: "",
-    status: "potential" as const,
+    status: "potential",
     value: "",
   })
 

@@ -12,9 +12,10 @@ import { Building2, Mail, Lock } from "lucide-react"
 
 import { useLanguage } from "@/contexts/language-context"
 import { ThemeLanguageSwitcher } from "@/components/theme-language-switcher"
+import { getApiUrl } from "@/lib/api-config"
 
 interface LoginPageProps {
-  onLogin: (email: string, password: string) => boolean
+  onLogin: (userData: any) => boolean
 }
 
 export default function LoginPage({ onLogin }: LoginPageProps) {
@@ -29,14 +30,48 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     setIsLoading(true)
     setError("")
 
-    // Simulate loading
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      const apiUrl = getApiUrl("/auth/login")
+      console.log("API URL:", apiUrl);
+      const response = await fetch(`${apiUrl}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      })
 
-    const success = onLogin(email, password)
-    if (!success) {
-      setError(t("login.error"))
+      
+      console.log("Login response:", response);
+
+      const data = await response.json()
+
+      console.log("Login response:", data);
+      
+      if (!response.ok || !data.success) {
+        throw new Error(data.error?.message || t("login.error"))
+      }
+
+      // Save token to local storage for future requests
+      localStorage.setItem('authToken', data.data.token)
+      localStorage.setItem('refreshToken', data.data.refreshToken)
+      
+      // Call the onLogin callback with user data
+      onLogin(data.data) 
+    } catch (error) {
+      setError((error as Error).message || t("login.error"))
+      console.error("Login error:", error)
+    }finally {
+      setIsLoading(false)
     }
-    setIsLoading(false)
+    // Simulate loading
+    // await new Promise((resolve) => setTimeout(resolve, 1000))
+
+    // const success = onLogin(email, password)
+    // if (!success) {
+    //   setError(t("login.error"))
+    // }
+    // setIsLoading(false)
   }
 
   return (

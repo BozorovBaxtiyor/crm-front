@@ -30,6 +30,8 @@ import { ThemeLanguageSwitcher } from "@/components/theme-language-switcher"
 import { CustomerModal, type Customer } from "@/components/customer-modal"
 import { DeleteConfirmationModal } from "@/components/delete-confirmation-modal"
 import { toast } from "@/hooks/use-toast"
+import { fetchWithAuth } from "@/lib/api"
+
 
 interface CRMDashboardProps {
   onLogout: () => void
@@ -38,6 +40,11 @@ interface CRMDashboardProps {
 export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
   const { t } = useLanguage()
   const [searchTerm, setSearchTerm] = useState("")
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState("")
+
+
 
   // Sample data
   const stats = [
@@ -149,6 +156,43 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
     }
   }
 
+  const handleLogout = async () => {
+    setIsLoggingOut(true)
+    try {
+      // Call the logout API endpoint
+      await fetchWithAuth("/auth/logout", { method: "POST" })
+      
+      // Clear local storage
+      localStorage.removeItem('authToken')
+      localStorage.removeItem('refreshToken')
+      
+      // Update state
+      onLogout()
+      
+      // Optional: Show success message
+      toast({
+        title: t("logout.success"),
+        description: t("logout.successMessage"),
+      })
+    } catch (error) {
+      console.error("Logout error:", error)
+      
+      // Still logout the user locally even if the API call fails
+      localStorage.removeItem('authToken')
+      localStorage.removeItem('refreshToken')
+      onLogout()
+      
+      // Optional: Show error message
+      toast({
+        title: t("logout.error"),
+        description: t("logout.errorFallback"),
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoggingOut(false)
+    }
+  }
+
   const recentActivities = [
     { id: 1, type: "call", description: "Alisher Karimov bilan qo'ng'iroq", time: "10 daqiqa oldin" },
     { id: 2, type: "email", description: "Malika Toshevaga taklif yuborildi", time: "1 soat oldin" },
@@ -188,9 +232,14 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
           </div>
           <div className="flex items-center space-x-4">
             <ThemeLanguageSwitcher />
-            <Button variant="outline" onClick={onLogout} className="bg-background">
+            <Button 
+              variant="outline" 
+              onClick={async () => await handleLogout()} 
+              className="bg-background"
+              disabled={isLoggingOut}
+            >
               <LogOut className="w-4 h-4 mr-2" />
-              {t("dashboard.logout")}
+              {isLoggingOut ? t("dashboard.loggingOut") : t("dashboard.logout")}
             </Button>
           </div>
         </div>

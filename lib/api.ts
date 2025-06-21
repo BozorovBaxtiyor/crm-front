@@ -14,6 +14,8 @@ export async function fetchWithAuth(endpoint: string, options: RequestInit = {})
     ...options,
     headers,
   })
+  console.log("Api response:", response);
+  
 
   // Token eskirgan bo'lsa, yangi token olish va so'rovni qayta yuborish
   if (response.status === 401) {

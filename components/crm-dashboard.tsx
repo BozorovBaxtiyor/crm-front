@@ -1,12 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, ForwardRefExoticComponent, RefAttributes } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import {
   Users,
   DollarSign,
@@ -23,6 +24,12 @@ import {
   Clock,
   Edit,
   Trash2,
+  RefreshCw,
+  LucideProps,
+  ChevronLeft,
+  ChevronsLeft,
+  ChevronRight,
+  ChevronsRight,
 } from "lucide-react"
 
 import { useLanguage } from "@/contexts/language-context"
@@ -31,6 +38,7 @@ import { CustomerModal, type Customer } from "@/components/customer-modal"
 import { DeleteConfirmationModal } from "@/components/delete-confirmation-modal"
 import { toast } from "@/hooks/use-toast"
 import { fetchWithAuth } from "@/lib/api"
+import { getDashboardAnalytics, getSalesAnalytics } from "@/lib/api/analytics"
 
 
 interface CRMDashboardProps {
@@ -38,74 +46,187 @@ interface CRMDashboardProps {
 }
 
 export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
+
+  const calculatePercentage = (value: number, total: number): number => {
+    if (total === 0) return 0;
+    return Math.round((value / total) * 100);
+  };
+
+  const getTotalCustomers = (customersByStatus: { active: number; potential: number; waiting: number }): number => {
+    return customersByStatus.active + customersByStatus.potential + customersByStatus.waiting;
+  };
   const { t } = useLanguage()
   const [searchTerm, setSearchTerm] = useState("")
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
+  const [analyticsLoading, setAnalyticsLoading] = useState(true)
+  interface SalesAnalytics {
+    topCustomers: { customerName: string; totalValue: number }[];
+  }
+  
+  const [salesAnalytics, setSalesAnalytics] = useState<SalesAnalytics | null>(null)
+  const [analyticsError, setAnalyticsError] = useState("")
+  interface AnalyticsData {
+    salesTrend: { month: string; sales: number }[];
+    customersByStatus: { active: number; potential: number; waiting: number };
+  }
 
-
-
-  // Sample data
-  const stats = [
-    { title: t("dashboard.customers"), value: "2,847", icon: Users, change: "+12%", color: "text-blue-600" },
-    { title: t("dashboard.sales"), value: "$45,231", icon: DollarSign, change: "+8%", color: "text-green-600" },
-    { title: t("dashboard.deals"), value: "127", icon: Target, change: "+23%", color: "text-purple-600" },
-    { title: t("dashboard.conversion"), value: "24.5%", icon: TrendingUp, change: "+5%", color: "text-orange-600" },
-  ]
-
-  const [customers, setCustomers] = useState<Customer[]>([
-    {
-      id: 1,
-      name: "Alisher Karimov",
-      email: "alisher@example.com",
-      phone: "+998901234567",
-      company: "Tech Solutions",
-      status: "active",
-      value: "$12,500",
-    },
-    {
-      id: 2,
-      name: "Malika Tosheva",
-      email: "malika@example.com",
-      phone: "+998907654321",
-      company: "Digital Agency",
-      status: "potential",
-      value: "$8,300",
-    },
-    {
-      id: 3,
-      name: "Bobur Rahimov",
-      email: "bobur@example.com",
-      phone: "+998909876543",
-      company: "StartUp Inc",
-      status: "active",
-      value: "$15,700",
-    },
-    {
-      id: 4,
-      name: "Nilufar Saidova",
-      email: "nilufar@example.com",
-      phone: "+998905432109",
-      company: "Marketing Pro",
-      status: "waiting",
-      value: "$6,200",
-    },
-    {
-      id: 5,
-      name: "Sardor Umarov",
-      email: "sardor@example.com",
-      phone: "+998902468135",
-      company: "Web Studio",
-      status: "active",
-      value: "$9,800",
-    },
-  ])
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
+  const [salesPeriod, setSalesPeriod] = useState<"daily" | "weekly" | "monthly" | "yearly">("monthly")
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
   const [modalMode, setModalMode] = useState<"add" | "edit">("add")
+
+  // crm-dashboard.tsx faylida, state e'lonlari qismida qo'shing
+  const [customers, setCustomers] = useState<Customer[]>([])
+  const [isCustomersLoading, setIsCustomersLoading] = useState(true)
+  const [customersError, setCustomersError] = useState("")
+
+  // Pagination uchun
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalItems, setTotalItems] = useState(0)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
+
+// Status filterlari uchun
+  const [statusFilter, setStatusFilter] = useState<string | null>(null)
+
+  // Mijozlarni backend'dan olish funksiyasi
+const fetchCustomers: (page?: number, searchQuery?: string, status?: string | null) => Promise<void> = async (page = currentPage, searchQuery = searchTerm, status = statusFilter) => {
+  setIsCustomersLoading(true)
+  setCustomersError("")
+  try {
+    // Query parametrlarini tuzish
+    const params = new URLSearchParams()
+    params.append('page', page.toString())
+    params.append('limit', itemsPerPage.toString())
+    
+    if (searchQuery) {
+      params.append('search', searchQuery)
+    }
+    
+    if (status) {
+      params.append('status', status)
+    }
+    
+    // API so'rovini yuborish
+    const response = await fetchWithAuth(`/customers?${params}`)
+    
+    // Ma'lumotlarni state'ga saqlash
+    setCustomers(response.data.customers)
+    
+    // Pagination ma'lumotlarini saqlash
+    const pagination = response.data.pagination
+    setCurrentPage(pagination.currentPage)
+    setTotalPages(pagination.totalPages)
+    setTotalItems(pagination.totalItems)
+    setItemsPerPage(pagination.itemsPerPage)
+    
+  } catch (error) {
+    console.error("Failed to fetch customers:", error)
+    setCustomersError(t("customers.fetchError"))
+    toast({
+      title: t("customers.fetchError"),
+      description: t("customers.tryAgain"),
+      variant: "destructive",
+    })
+  } finally {
+    setIsCustomersLoading(false)
+  }
+}
+  const loadDashboardAnalytics = async () => {
+    setAnalyticsLoading(true)
+    setAnalyticsError("")
+    try {
+      const response = await getDashboardAnalytics()
+      setAnalyticsData(response.data)
+      
+      // Statistikalarni yangilash
+      const newStats = [
+        { 
+          title: t("dashboard.customers"), 
+          value: response.data.totalCustomers.toLocaleString(), 
+          icon: Users, 
+          change: "+12%", 
+          color: "text-blue-600" 
+        },
+        { 
+          title: t("dashboard.sales"), 
+          value: `$${response.data.monthlySales.toLocaleString()}`, 
+          icon: DollarSign, 
+          change: "+8%", 
+          color: "text-green-600" 
+        },
+        { 
+          title: t("dashboard.deals"), 
+          value: response.data.activeDeals.toString(), 
+          icon: Target, 
+          change: "+23%", 
+          color: "text-purple-600" 
+        },
+        { 
+          title: t("dashboard.conversion"), 
+          value: `${response.data.conversionRate}%`, 
+          icon: TrendingUp, 
+          change: "+5%", 
+          color: "text-orange-600" 
+        },
+      ]
+      
+      setStats(newStats)
+      
+    } catch (error) {
+      console.error("Analytics loading error:", error)
+      setAnalyticsError(t("analytics.loadError"))
+      toast({
+        title: t("analytics.loadError"),
+        description: t("analytics.tryAgain"),
+        variant: "destructive",
+      })
+    } finally {
+      setAnalyticsLoading(false)
+    }
+  }
+
+  const loadSalesAnalytics = async () => {
+    setAnalyticsLoading(true)
+    try {
+      const response = await getSalesAnalytics({ period: salesPeriod })
+      setSalesAnalytics(response.data)
+    } catch (error) {
+      console.error("Sales analytics loading error:", error)
+    } finally {
+      setAnalyticsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadDashboardAnalytics()
+    loadSalesAnalytics()
+    fetchCustomers() // Mijozlarni yuklash
+  }, []) 
+
+  useEffect(() => {
+    // Qidiruv matnini terishda bir oz kechikish qilish
+    const delayDebounce = setTimeout(() => {
+      fetchCustomers(1, searchTerm, statusFilter)
+    }, 500)
+    
+    return () => clearTimeout(delayDebounce)
+  }, [searchTerm, statusFilter])
+
+  const [stats, setStats] = useState([
+    { title: t("dashboard.customers"), value: "0", icon: Users, change: "0%", color: "text-blue-600" },
+    { title: t("dashboard.sales"), value: "$0", icon: DollarSign, change: "0%", color: "text-green-600" },
+    { title: t("dashboard.deals"), value: "0", icon: Target, change: "0%", color: "text-purple-600" },
+    { title: t("dashboard.conversion"), value: "0%", icon: TrendingUp, change: "0%", color: "text-orange-600" },
+  ])
+  // function setStats(newStats: { title: string; value: any; icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>; change: string; color: string }[]) {
+  //   throw new Error("Function not implemented.")
+  // }
 
   const handleAddCustomer = () => {
     setSelectedCustomer(null)
@@ -124,35 +245,81 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
     setIsDeleteModalOpen(true)
   }
 
-  const handleSaveCustomer = (customerData: Omit<Customer, "id"> | Customer) => {
-    if (modalMode === "add") {
-      const newCustomer: Customer = {
-        ...(customerData as Omit<Customer, "id">),
-        id: Math.max(...customers.map((c) => c.id)) + 1,
+  const handleSaveCustomer = async (customerData: Omit<Customer, "id"> | Customer) => {
+    try {
+      if (modalMode === "add") {
+        // Yangi mijoz qo'shish
+        const response = await fetchWithAuth("/customers", {
+          method: "POST",
+          body: JSON.stringify(customerData),
+        })
+        
+        // Muvaffaqiyatli qo'shilgandan so'ng ro'yxatni yangilash
+        toast({
+          title: t("customers.saveSuccess"),
+          description: t("customers.addSuccess"),
+        })
+        
+        // Ro'yxatni yangilash (birinchi sahifaga qaytish)
+        fetchCustomers(1)
+        
+      } else {
+        // Mavjud mijozni yangilash
+        const id = (customerData as Customer).id
+        await fetchWithAuth(`/customers/${id}`, {
+          method: "PUT",
+          body: JSON.stringify(customerData),
+        })
+        
+        toast({
+          title: t("customers.saveSuccess"),
+          description: t("customers.updateSuccess"),
+        })
+        
+        // Joriy sahifani qayta yuklash
+        fetchCustomers(currentPage)
       }
-      setCustomers([...customers, newCustomer])
+      
+      // Modalni yopish
+      setIsModalOpen(false)
+      
+    } catch (error) {
+      console.error("Failed to save customer:", error)
       toast({
-        title: t("customers.saveSuccess"),
-        description: "Yangi mijoz qo'shildi",
-      })
-    } else {
-      setCustomers(customers.map((c) => (c.id === (customerData as Customer).id ? (customerData as Customer) : c)))
-      toast({
-        title: t("customers.saveSuccess"),
-        description: "Mijoz ma'lumotlari yangilandi",
+        title: t("customers.saveError"),
+        description: t("customers.tryAgain"),
+        variant: "destructive",
       })
     }
   }
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (selectedCustomer) {
-      setCustomers(customers.filter((c) => c.id !== selectedCustomer.id))
-      toast({
-        title: t("customers.deleteSuccess"),
-        description: `${selectedCustomer.name} o'chirildi`,
-      })
-      setIsDeleteModalOpen(false)
-      setSelectedCustomer(null)
+      try {
+        await fetchWithAuth(`/customers/${selectedCustomer.id}`, {
+          method: "DELETE",
+        })
+        
+        toast({
+          title: t("customers.deleteSuccess"),
+          description: `${selectedCustomer.name} ${t("customers.wasDeleted")}`,
+        })
+        
+        // Ro'yxatni yangilash
+        fetchCustomers(currentPage)
+        
+        // Modalni yopish
+        setIsDeleteModalOpen(false)
+        setSelectedCustomer(null)
+        
+      } catch (error) {
+        console.error("Failed to delete customer:", error)
+        toast({
+          title: t("customers.deleteError"),
+          description: t("customers.tryAgain"),
+          variant: "destructive",
+        })
+      }
     }
   }
 
@@ -254,7 +421,13 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{stat.title}</p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {analyticsLoading ? (
+                        <span className="animate-pulse">...</span>
+                      ) : (
+                        stat.value
+                      )}
+                    </p>
                     <p className={`text-sm ${stat.color}`}>
                       {stat.change} {t("dashboard.lastMonth")}
                     </p>
@@ -296,70 +469,163 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
 
             {/* Customers Table */}
             <Card>
-              <CardHeader>
-                <CardTitle>{t("customers.list")}</CardTitle>
-                <CardDescription>{t("customers.manage")}</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>{t("customers.list")}</CardTitle>
+                  <CardDescription>{t("customers.manage")}</CardDescription>
+                </div>
+                <div className="flex items-center space-x-2">
+                <Select 
+                    value={statusFilter || "all"} 
+                    onValueChange={(val) => setStatusFilter(val === "all" ? null : val)}
+                  >
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder={t("customers.filterByStatus")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{t("customers.allStatuses")}</SelectItem>
+                      <SelectItem value="active">{t("status.active")}</SelectItem>
+                      <SelectItem value="potential">{t("status.potential")}</SelectItem>
+                      <SelectItem value="waiting">{t("status.waiting")}</SelectItem>
+                    </SelectContent>
+                </Select>
+                  
+                  <Button variant="outline" onClick={() => fetchCustomers(currentPage)}>
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </div>
               </CardHeader>
+              
               <CardContent>
-                <div className="space-y-4">
-                  {filteredCustomers.map((customer) => (
-                    <div
-                      key={customer.id}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 dark:border-gray-700"
-                    >
-                      <div className="flex items-center space-x-4">
-                        <Avatar>
-                          <AvatarImage src={`/placeholder.svg?height=40&width=40`} />
-                          <AvatarFallback>
-                            {customer.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h3 className="font-semibold text-gray-900 dark:text-white">{customer.name}</h3>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">{customer.company}</p>
-                          <div className="flex items-center space-x-4 mt-1">
-                            <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
-                              <Mail className="w-3 h-3 mr-1" />
-                              {customer.email}
-                            </div>
-                            <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
-                              <Phone className="w-3 h-3 mr-1" />
-                              {customer.phone}
+                {isCustomersLoading ? (
+                  // Loading holati
+                  <div className="flex justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  </div>
+                ) : customersError ? (
+                  // Xatolik holati
+                  <div className="text-center py-8">
+                    <p className="text-red-500">{customersError}</p>
+                    <Button onClick={() => fetchCustomers(currentPage)} className="mt-4">
+                      {t("common.tryAgain")}
+                    </Button>
+                  </div>
+                ) : customers.length === 0 ? (
+                  // Bo'sh ro'yxat holati
+                  <div className="text-center py-12">
+                    <Users className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                    <h3 className="text-lg font-medium">{t("customers.noCustomers")}</h3>
+                    <p className="text-gray-500">{t("customers.addYourFirst")}</p>
+                    <Button className="mt-4" onClick={handleAddCustomer}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      {t("customers.addNew")}
+                    </Button>
+                  </div>
+                ) : (
+                  // Mijozlar ro'yxati
+                  <div className="space-y-4">
+                    {customers.map((customer) => (
+                      <div
+                        key={customer.id}
+                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 dark:border-gray-700"
+                      >
+                        <div className="flex items-center space-x-4">
+                          <Avatar>
+                            <AvatarImage src={`/image.png?height=40&width=40`} />
+                            <AvatarFallback>
+                              {customer.name
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <h3 className="font-semibold text-gray-900 dark:text-white">{customer.name}</h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">{customer.company}</p>
+                            <div className="flex items-center space-x-4 mt-1">
+                              <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                                <Mail className="w-3 h-3 mr-1" />
+                                {customer.email}
+                              </div>
+                              <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                                <Phone className="w-3 h-3 mr-1" />
+                                {customer.phone}
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                      <div className="flex items-center space-x-4">
-                        <Badge className={getStatusColor(customer.status)}>{t(`status.${customer.status}`)}</Badge>
-                        <div className="text-right">
-                          <p className="font-semibold text-gray-900 dark:text-white">{customer.value}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">{t("customers.value")}</p>
+                        <div className="flex items-center space-x-4">
+                          <Badge className={getStatusColor(customer.status)}>{t(`status.${customer.status}`)}</Badge>
+                          <div className="text-right">
+                            <p className="font-semibold text-gray-900 dark:text-white">{customer.value}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{t("customers.value")}</p>
+                          </div>
+                          <div className="flex space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditCustomer(customer)}
+                              className="bg-background"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteCustomer(customer)}
+                              className="bg-background text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
-                        <div className="flex space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditCustomer(customer)}
-                            className="bg-background"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteCustomer(customer)}
-                            className="bg-background text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                    
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-center space-x-2 pt-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => fetchCustomers(1)}
+                          disabled={currentPage <= 1}
+                        >
+                          <ChevronsLeft className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => fetchCustomers(currentPage - 1)}
+                          disabled={currentPage <= 1}
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        
+                        <span className="text-sm px-4">
+                          {t("pagination.page")} {currentPage} {t("pagination.of")} {totalPages}
+                        </span>
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => fetchCustomers(currentPage + 1)}
+                          disabled={currentPage >= totalPages}
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => fetchCustomers(totalPages)}
+                          disabled={currentPage >= totalPages}
+                        >
+                          <ChevronsRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -439,52 +705,185 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Oylik Sotuv Trendi</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-64 flex items-center justify-center bg-gray-50 rounded">
-                    <div className="text-center">
-                      <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                      <p className="text-gray-500">Grafik bu yerda ko'rsatiladi</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Mijozlar Taqsimoti</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span>Faol mijozlar</span>
-                      <span className="font-semibold">60%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-green-600 h-2 rounded-full" style={{ width: "60%" }}></div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span>Potensial mijozlar</span>
-                      <span className="font-semibold">25%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-blue-600 h-2 rounded-full" style={{ width: "25%" }}></div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span>Kutilayotgan mijozlar</span>
-                      <span className="font-semibold">15%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-yellow-600 h-2 rounded-full" style={{ width: "15%" }}></div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+          {analyticsError ? (
+            <div className="text-center py-8">
+              <p className="text-red-500">{analyticsError}</p>
+              <Button onClick={loadDashboardAnalytics} className="mt-4">
+                {t("common.tryAgain")}
+              </Button>
             </div>
-          </TabsContent>
+          ) : (
+            <>
+              {/* Sotuvlar davri tanlash */}
+              <div className="flex justify-end mb-4">
+                <Select value={salesPeriod} onValueChange={(value: any) => setSalesPeriod(value)}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue placeholder="Davr" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="daily">{t("analytics.daily")}</SelectItem>
+                    <SelectItem value="weekly">{t("analytics.weekly")}</SelectItem>
+                    <SelectItem value="monthly">{t("analytics.monthly")}</SelectItem>
+                    <SelectItem value="yearly">{t("analytics.yearly")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Oylik Sotuv Trendi */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{t("analytics.salesTrend")}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {analyticsLoading ? (
+                      <div className="h-64 flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                      </div>
+                    ) : analyticsData && analyticsData.salesTrend && analyticsData.salesTrend.length > 0 ? (
+                      <div className="h-64">
+                        {/* Bu yerga chart kutubxonasi yordamida grafikni chizish mumkin */}
+                        <div className="h-full flex flex-col justify-end space-y-2">
+                          <div className="flex justify-between">
+                            {analyticsData.salesTrend.map((item, index) => (
+                              <div key={index} className="flex flex-col items-center">
+                                <div 
+                                  className="bg-blue-600 w-8" 
+                                  style={{ 
+                                    height: `${(item.sales / Math.max(...analyticsData.salesTrend.map(i => i.sales))) * 200}px` 
+                                  }}
+                                ></div>
+                                <span className="text-xs mt-1">{item.month}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="h-64 flex items-center justify-center bg-gray-50 rounded">
+                        <div className="text-center">
+                          <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                          <p className="text-gray-500">{t("analytics.noData")}</p>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+                
+                {/* Mijozlar Taqsimoti */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{t("analytics.customerDistribution")}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {analyticsLoading ? (
+                      <div className="flex justify-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {/* Faol mijozlar */}
+                        <div className="flex justify-between items-center">
+                          <span>{t("status.active")}</span>
+                          <span className="font-semibold">
+                            {calculatePercentage(
+                              analyticsData?.customersByStatus.active || 0,
+                              getTotalCustomers(analyticsData?.customersByStatus || { active: 0, potential: 0, waiting: 0 })
+                            )}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-green-600 h-2 rounded-full" 
+                            style={{ 
+                              width: `${calculatePercentage(
+                                analyticsData?.customersByStatus.active||0,
+                                getTotalCustomers(analyticsData?.customersByStatus || { active: 0, potential: 0, waiting: 0 })
+                              )}%` 
+                            }}
+                          ></div>
+                        </div>
+                        
+                        {/* Potensial mijozlar */}
+                        <div className="flex justify-between items-center">
+                          <span>{t("status.potential")}</span>
+                          <span className="font-semibold">
+                            {calculatePercentage(
+                             analyticsData?.customersByStatus.active||0,
+                             getTotalCustomers(analyticsData?.customersByStatus || { active: 0, potential: 0, waiting: 0 })
+                            )}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-blue-600 h-2 rounded-full" 
+                            style={{ 
+                              width: `${calculatePercentage(
+                                analyticsData?.customersByStatus.active||0,
+                                getTotalCustomers(analyticsData?.customersByStatus || { active: 0, potential: 0, waiting: 0 })
+                              )}%` 
+                            }}
+                          ></div>
+                        </div>
+                        
+                        {/* Kutilayotgan mijozlar */}
+                        <div className="flex justify-between items-center">
+                          <span>{t("status.waiting")}</span>
+                          <span className="font-semibold">
+                            {calculatePercentage(
+                              analyticsData?.customersByStatus.active||0,
+                              getTotalCustomers(analyticsData?.customersByStatus || { active: 0, potential: 0, waiting: 0 })
+                            )}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-yellow-600 h-2 rounded-full" 
+                            style={{ 
+                              width: `${calculatePercentage(
+                                analyticsData?.customersByStatus.active||0,
+                                getTotalCustomers(analyticsData?.customersByStatus || { active: 0, potential: 0, waiting: 0 })
+                              )}%` 
+                            }}
+                          ></div>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+              
+              {/* Top Customers Card */}
+              {salesAnalytics && salesAnalytics.topCustomers && salesAnalytics.topCustomers.length > 0 && (
+                <Card className="mt-6">
+                  <CardHeader>
+                    <CardTitle>{t("analytics.topCustomers")}</CardTitle>
+                    <CardDescription>{t("analytics.mostValuable")}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {salesAnalytics.topCustomers.map((customer, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                          <div className="flex items-center space-x-4">
+                            <div className="flex-shrink-0 w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center">
+                              <span className="font-bold">{index + 1}</span>
+                            </div>
+                            <div>
+                              <p className="font-semibold">{customer.customerName}</p>
+                            </div>
+                          </div>
+                          <div>
+                            <p className="font-bold text-green-600">${customer.totalValue.toLocaleString()}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </>
+          )}
+        </TabsContent>
         </Tabs>
       </div>
       <CustomerModal
@@ -504,3 +903,7 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
     </div>
   )
 }
+function setStats(newStats: { title: string; value: any; icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>; change: string; color: string }[]) {
+  throw new Error("Function not implemented.")
+}
+

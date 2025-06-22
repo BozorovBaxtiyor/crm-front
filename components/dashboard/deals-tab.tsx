@@ -12,7 +12,8 @@ import {
 } from '@/components/ui/select';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, DollarSign, Edit, Plus, RefreshCw, Trash2, Users } from 'lucide-react';
 import { useLanguage } from '@/contexts/language-context';
-import { Deal } from './types';
+import { Customer, Deal } from './types';
+import { DealModal } from '../deal-modal';
 
 interface DealsTabProps {
   deals: Deal[];
@@ -23,10 +24,11 @@ interface DealsTabProps {
   currentPage: number;
   totalPages: number;
   fetchDeals: (page?: number, status?: string | null) => Promise<void>;
-  handleAddDeal: () => void;
+  handleAddDeal: (deal: Omit<Deal, 'id' | 'createdAt' | 'updatedAt'>) => void;
   handleEditDeal: (deal: Deal) => void;
   handleDeleteDeal: (dealId: number) => Promise<void>;
   getStatusColor: (status: string) => string;
+  customers: Customer[];
 }
 
 export function DealsTab({
@@ -39,11 +41,54 @@ export function DealsTab({
   totalPages,
   fetchDeals,
   handleAddDeal,
-  handleEditDeal,
   handleDeleteDeal,
-  getStatusColor,
+  handleEditDeal,
+  customers,
 }: DealsTabProps) {
+  const [isDealModalOpen, setIsDealModalOpen] = useState(false);
+  const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
+  const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
+
+  const handleAddNewDeal = () => {
+    setSelectedDeal(null);
+    setModalMode('add');
+    setIsDealModalOpen(true);
+  };
+
+  const handleEditDealLocal = (deal: Deal) => {
+    setSelectedDeal(deal);
+    setModalMode('edit');
+    setIsDealModalOpen(true);
+  };
+  const handleSaveLocal = async (dealData: Omit<Deal, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      if (modalMode === 'add') {
+        await handleAddDeal(dealData);
+      } else {
+        await handleEditDeal({ ...dealData, id: selectedDeal!.id });
+      }
+      setIsDealModalOpen(false);
+      fetchDeals(currentPage);
+    } catch (error) {
+      console.error('Failed to save deal:', error);
+    }
+  };
   const { t } = useLanguage();
+
+  const getStatusColor = (status: Deal['status']): string => {
+    switch (status) {
+      case 'new':
+        return 'bg-blue-100 text-blue-800'; // New deals for blue
+      case 'in_progress':
+        return 'bg-yellow-100 text-yellow-800'; // In progress deals for yellow
+      case 'completed':
+        return 'bg-green-100 text-green-800'; // Completed deals for green
+      case 'cancelled':
+        return 'bg-red-100 text-red-800'; // Cancelled deals for red
+      default:
+        return 'bg-gray-100 text-gray-800'; // Default case for any unexpected status
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -69,10 +114,10 @@ export function DealsTab({
             <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleAddDeal}>
+        {/* <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleAddNewDeal}>
           <Plus className="w-4 h-4 mr-2" />
           {t('deals.addNew')}
-        </Button>
+        </Button> */}
       </div>
 
       {/* Deals List */}
@@ -100,10 +145,10 @@ export function DealsTab({
               <DollarSign className="h-12 w-12 text-gray-400 mx-auto mb-3" />
               <h3 className="text-lg font-medium">{t('deals.noDeals')}</h3>
               <p className="text-gray-500">{t('deals.addYourFirst')}</p>
-              <Button className="mt-4" onClick={handleAddDeal}>
+              {/* <Button className="mt-4" onClick={handleAddNewDeal}>
                 <Plus className="w-4 h-4 mr-2" />
                 {t('deals.addNew')}
-              </Button>
+              </Button> */}
             </div>
           ) : (
             <div className="space-y-4">
@@ -114,13 +159,8 @@ export function DealsTab({
                 >
                   <div className="mb-3 sm:mb-0">
                     <div className="flex items-center">
-                      <h3 className="font-semibold text-gray-900 dark:text-white">
-                        {deal.title}
-                      </h3>
-                      <Badge
-                        className={`${getStatusColor(deal.status)} ml-2`}
-                        variant="outline"
-                      >
+                      <h3 className="font-semibold text-gray-900 dark:text-white">{deal.title}</h3>
+                      <Badge className={`${getStatusColor(deal.status)} ml-2`} variant="outline">
                         {t(`dealStatus.${deal.status}`)}
                       </Badge>
                     </div>
@@ -137,25 +177,25 @@ export function DealsTab({
                       <p className="font-semibold text-lg text-green-600">
                         ${deal.value.toLocaleString()}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {t('deals.value')}
-                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{t('deals.value')}</p>
                     </div>
                     <div className="flex space-x-2">
-                      <Button
+                      {/* <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleEditDeal(deal)}
-                        className="bg-background">
+                        onClick={() => handleEditDealLocal(deal)}
+                        className="bg-background"
+                      >
                         <Edit className="w-4 h-4" />
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleDeleteDeal(deal.id)}
-                        className="bg-background text-red-600 hover:text-red-blue700">
+                        className="bg-background text-red-600 hover:text-red-blue700"
+                      >
                         <Trash2 className="w-4 h-4" />
-                      </Button>
+                      </Button> */}
                     </div>
                   </div>
                 </div>
@@ -167,8 +207,8 @@ export function DealsTab({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => fetchDeals(deals1)}
-                      disabled={page <= currentPage1}
+                      onClick={() => fetchDeals(currentPage)}
+                      disabled={currentPage <= 1}
                     >
                       <ChevronsLeft className="h-4 w-4" />
                     </Button>
@@ -201,11 +241,19 @@ export function DealsTab({
                     </Button>
                   </div>
                 </div>
-              ))}
+              )}
             </div>
-          ))}
+          )}
         </CardContent>
       </Card>
+      {/* <DealModal
+        isOpen={isDealModalOpen}
+        onClose={() => setIsDealModalOpen(false)}
+        onSave={handleSaveLocal}
+        deal={selectedDeal}
+        mode={modalMode}
+        customerId={selectedDeal?.customerId || undefined}
+      /> */}
     </div>
   );
 }

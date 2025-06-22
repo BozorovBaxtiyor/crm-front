@@ -1,126 +1,160 @@
-"use client"
+'use client';
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 
-type Language = "uz" | "ru" | "en"
+type Language = 'uz' | 'ru' | 'en';
 
 interface LanguageContextType {
-  language: Language
-  setLanguage: (lang: Language) => void
-  t: (key: string) => string
+  language: Language;
+  setLanguage: (lang: Language) => void;
+  t: (key: string) => string;
 }
 
 const translations = {
-   uz: {
-    "dashboard.title": "CRM Tizimi",
-    "dashboard.logout": "Chiqish",
-    "dashboard.loggingOut": "Chiqilmoqda...",
-    "dashboard.customers": "Mijozlar",
-    "dashboard.sales": "Sotuvlar",
-    "dashboard.deals": "Bitimlar",
-    "dashboard.conversion": "Konversiya",
+  uz: {
+    'dashboard.title': 'CRM Tizimi',
+    'dashboard.logout': 'Chiqish',
+    'dashboard.loggingOut': 'Chiqilmoqda...',
+    'dashboard.customers': 'Mijozlar',
+    'dashboard.sales': 'Sotuvlar',
+    'dashboard.deals': 'Bitimlar',
+    'dashboard.conversion': 'Konversiya',
+    'dashboard.lastMonth': "o'tgan oyga nisbatan",
 
-    "tabs.customers": "Mijozlar",
-    "tabs.deals": "Bitimlar",
-    "tabs.activities": "Faoliyatlar",
-    "tabs.analytics": "Tahlil",
+    'login.title': 'CRM Tizimiga Kirish',
+    'login.description': 'Hisobingizga kirish uchun email va parolingizni kiriting',
+    'login.email': 'Email manzil',
+    'login.password': 'Parol',
+    'login.button': 'Tizimga Kirish',
+    'login.loading': 'Kirish...',
+    'login.error': "Email yoki parol noto'g'ri. Qaytadan urinib ko'ring.",
+    'login.demo': 'Demo hisobi:',
 
-    "customers.search": "Mijozlarni qidiring...",
-    "customers.addNew": "Yangi mijoz qo‘shish",
-    "customers.list": "Mijozlar ro‘yxati",
-    "customers.manage": "Mijozlarni ko‘rish va boshqarish",
-    "customers.filterByStatus": "Status bo‘yicha filtrlash",
-    "customers.allStatuses": "Barcha statuslar",
-    "customers.fetchError": "Mijozlarni yuklashda xatolik",
-    "customers.tryAgain": "Iltimos, qayta urinib ko‘ring",
-    "customers.noCustomers": "Mijozlar topilmadi",
-    "customers.addYourFirst": "Boshlash uchun birinchi mijozingizni qo‘shing",
-    "customers.value": "Mijoz qiymati",
-    "customers.saveSuccess": "Mijoz saqlandi",
-    "customers.addSuccess": "Mijoz muvaffaqiyatli qo‘shildi",
-    "customers.updateSuccess": "Mijoz muvaffaqiyatli yangilandi",
-    "customers.saveError": "Mijozni saqlashda xatolik",
-    "customers.deleteSuccess": "Mijoz o‘chirildi",
-    "customers.wasDeleted": "muvaffaqiyatli o‘chirildi",
-    "customers.deleteError": "Mijozni o‘chirishda xatolik",
+    'common.yes': 'Ha',
+    'common.no': "Yo'q",
+    'common.close': 'Yopish',
+    'common.cancel': 'Bekor qilish',
+    'common.save': 'Saqlash',
+    'common.tryAgain': 'Qayta urinib ko‘ring',
 
-    "status.active": "Faol",
-    "status.potential": "Potensial",
-    "status.waiting": "Kutilmoqda",
+    'tabs.customers': 'Mijozlar',
+    'tabs.deals': 'Bitimlar',
+    'tabs.activities': 'Faoliyatlar',
+    'tabs.analytics': 'Tahlil',
 
-    "deals.addNew": "Yangi bitim qo‘shish",
-    "deals.list": "Bitimlar ro‘yxati",
-    "deals.manage": "Bitimlarni ko‘rish va boshqarish",
-    "deals.filterByStatus": "Status bo‘yicha filtrlash",
-    "deals.allStatuses": "Barcha statuslar",
-    "deals.fetchError": "Bitimlarni yuklashda xatolik",
-    "deals.noDeals": "Bitimlar topilmadi",
-    "deals.addYourFirst": "Boshlash uchun birinchi bitimingizni qo‘shing",
-    "deals.value": "Bitim qiymati",
-    "deals.noCustomer": "Mijoz biriktirilmagan",
-    "deals.saveSuccess": "Bitim saqlandi",
-    "deals.addSuccess": "Bitim muvaffaqiyatli qo‘shildi",
-    "deals.updateSuccess": "Bitim muvaffaqiyatli yangilandi",
-    "deals.saveError": "Bitimni saqlashda xatolik",
-    "deals.deleteSuccess": "Bitim o‘chirildi",
-    "deals.wasDeleted": "Bitim muvaffaqiyatli o‘chirildi",
-    "deals.deleteError": "Bitimni o‘chirishda xatolik",
+    'customers.search': 'Mijozlarni qidiring...',
+    'customers.addNew': 'Yangi mijoz qo‘shish',
+    'customers.list': 'Mijozlar ro‘yxati',
+    'customers.manage': 'Mijozlarni ko‘rish va boshqarish',
+    'customers.filterByStatus': 'Status bo‘yicha filtrlash',
+    'customers.allStatuses': 'Barcha statuslar',
+    'customers.fetchError': 'Mijozlarni yuklashda xatolik',
+    'customers.tryAgain': 'Iltimos, qayta urinib ko‘ring',
+    'customers.noCustomers': 'Mijozlar topilmadi',
+    'customers.addYourFirst': 'Boshlash uchun birinchi mijozingizni qo‘shing',
+    'customers.value': 'Level',
+    'customers.saveSuccess': 'Mijoz saqlandi',
+    'customers.addSuccess': 'Mijoz muvaffaqiyatli qo‘shildi',
+    'customers.updateSuccess': 'Mijoz muvaffaqiyatli yangilandi',
+    'customers.saveError': 'Mijozni saqlashda xatolik',
+    'customers.deleteSuccess': 'Mijoz o‘chirildi',
+    'customers.wasDeleted': 'muvaffaqiyatli o‘chirildi',
+    'customers.deleteError': 'Mijozni o‘chirishda xatolik',
+    'customers.addTitle': 'Yangi mijoz qo‘shish',
+    'customers.name': 'Ismi',
+    'customers.email': 'Elektron pochta',
+    'customers.phone': 'Telefon',
+    'customers.company': 'Kompaniya',
+    'customers.status': 'Holati',
+    'customers.actions': 'Amallar',
+    'customers.edit': 'Tahrirlash',
+    'customers.delete': 'O‘chirish',
+    'customers.save': 'Saqlash',
+    'customers.cancel': 'Bekor qilish',
+    'customers.editTitle': 'Mijozni tahrirlash',
+    'customers.deleteConfirm': 'Ushbu mijozni o‘chirishga ishonchingiz komilmi?',
 
-    "dealStatus.new": "Yangi",
-    "dealStatus.in_progress": "Jarayonda",
-    "dealStatus.completed": "Yakunlangan",
-    "dealStatus.cancelled": "Bekor qilingan",
+    'status.active': 'Faol',
+    'status.potential': 'Potensial',
+    'status.waiting': 'Kutilmoqda',
 
-    "activities.addNew": "Yangi faoliyat qo‘shish",
-    "activities.list": "Faoliyatlar ro‘yxati",
-    "activities.description": "Mijozlar bilan aloqalarni kuzating",
-    "activities.filterByType": "Turi bo‘yicha filtrlash",
-    "activities.allTypes": "Barcha turlar",
-    "activities.fetchError": "Faoliyatlarni yuklashda xatolik",
-    "activities.noActivities": "Faoliyatlar topilmadi",
-    "activities.addYourFirst": "Boshlash uchun birinchi faoliyatingizni qo‘shing",
-    "activities.validationError": "Noto‘g‘ri ma’lumot",
-    "activities.fillAllFields": "Iltimos, barcha maydonlarni to‘ldiring",
-    "activities.addSuccess": "Faoliyat qo‘shildi",
-    "activities.activityAdded": "Faoliyat muvaffaqiyatli qo‘shildi",
-    "activities.addError": "Faoliyatni qo‘shishda xatolik",
-    "activities.type": "Faoliyat turi",
-    "activities.selectType": "Faoliyat turini tanlang",
-    "activities.customer": "Mijoz",
-    "activities.selectCustomer": "Mijozni tanlang",
+    'deals.addNew': 'Yangi bitim qo‘shish',
+    'deals.list': 'Bitimlar ro‘yxati',
+    'deals.manage': 'Bitimlarni ko‘rish va boshqarish',
+    'deals.filterByStatus': 'Status bo‘yicha filtrlash',
+    'deals.allStatuses': 'Barcha statuslar',
+    'deals.fetchError': 'Bitimlarni yuklashda xatolik',
+    'deals.noDeals': 'Bitimlar topilmadi',
+    'deals.addYourFirst': 'Boshlash uchun birinchi bitimingizni qo‘shing',
+    'deals.value': 'Bitim qiymati',
+    'deals.noCustomer': 'Mijoz biriktirilmagan',
+    'deals.saveSuccess': 'Bitim saqlandi',
+    'deals.addSuccess': 'Bitim muvaffaqiyatli qo‘shildi',
+    'deals.updateSuccess': 'Bitim muvaffaqiyatli yangilandi',
+    'deals.saveError': 'Bitimni saqlashda xatolik',
+    'deals.deleteSuccess': 'Bitim o‘chirildi',
+    'deals.wasDeleted': 'Bitim muvaffaqiyatli o‘chirildi',
+    'deals.deleteError': 'Bitimni o‘chirishda xatolik',
+    'deals.addTitle': 'Yangi bitim qo‘shish',
+    'deals.editTitle': 'Bitimni tahrirlash',
+    'deals.title': 'Sarlavha',
+    'deals.description': 'Tavsif',
+    'deals.status': 'Holati',
+    'deals.selectStatus': 'Holatni tanlang',
+    'deals.customer': 'Mijoz',
+    'deals.selectCustomer': 'Mijozni tanlang',
 
-    "activityType.call": "Qo‘ng‘iroq",
-    "activityType.email": "Email",
-    "activityType.meeting": "Uchrashuv",
-    "activityType.deal": "Bitim",
+    'dealStatus.new': 'Yangi',
+    'dealStatus.in_progress': 'Jarayonda',
+    'dealStatus.completed': 'Yakunlangan',
+    'dealStatus.cancelled': 'Bekor qilingan',
 
-    "analytics.salesTrend": "Sotuvlar tendensiyasi",
-    "analytics.customerDistribution": "Mijozlar taqsimoti",
-    "analytics.topCustomers": "Eng yaxshi mijozlar",
-    "analytics.mostValuable": "Eng qadrli mijozlar",
-    "analytics.loadError": "Tahlillarni yuklashda xatolik",
-    "analytics.tryAgain": "Iltimos, qayta urinib ko‘ring",
-    "analytics.noData": "Ma’lumot yo‘q",
-    "analytics.daily": "Kunlik",
-    "analytics.weekly": "Haftalik",
-    "analytics.monthly": "Oylik",
-    "analytics.yearly": "Yillik",
+    'activities.addNew': 'Yangi faoliyat qo‘shish',
+    'activities.list': 'Faoliyatlar ro‘yxati',
+    'activities.description': 'Mijozlar bilan aloqalarni kuzating',
+    'activities.filterByType': 'Turi bo‘yicha filtrlash',
+    'activities.allTypes': 'Barcha turlar',
+    'activities.fetchError': 'Faoliyatlarni yuklashda xatolik',
+    'activities.noActivities': 'Faoliyatlar topilmadi',
+    'activities.addYourFirst': 'Boshlash uchun birinchi faoliyatingizni qo‘shing',
+    'activities.validationError': 'Noto‘g‘ri ma’lumot',
+    'activities.fillAllFields': 'Iltimos, barcha maydonlarni to‘ldiring',
+    'activities.addSuccess': 'Faoliyat qo‘shildi',
+    'activities.activityAdded': 'Faoliyat muvaffaqiyatli qo‘shildi',
+    'activities.addError': 'Faoliyatni qo‘shishda xatolik',
+    'activities.type': 'Faoliyat turi',
+    'activities.selectType': 'Faoliyat turini tanlang',
+    'activities.customer': 'Mijoz',
+    'activities.selectCustomer': 'Mijozni tanlang',
 
-    "time.minutesAgo": "daqiqa oldin",
-    "time.hoursAgo": "soat oldin",
-    "time.daysAgo": "kun oldin",
+    'activityType.call': 'Qo‘ng‘iroq',
+    'activityType.email': 'Email',
+    'activityType.meeting': 'Uchrashuv',
+    'activityType.deal': 'Bitim',
 
-    "common.cancel": "Bekor qilish",
-    "common.save": "Saqlash",
-    "common.tryAgain": "Qayta urinib ko‘ring",
+    'analytics.salesTrend': 'Sotuvlar tendensiyasi',
+    'analytics.customerDistribution': 'Mijozlar taqsimoti',
+    'analytics.topCustomers': 'Eng yaxshi mijozlar',
+    'analytics.mostValuable': 'Eng qadrli mijozlar',
+    'analytics.loadError': 'Tahlillarni yuklashda xatolik',
+    'analytics.tryAgain': 'Iltimos, qayta urinib ko‘ring',
+    'analytics.noData': 'Ma’lumot yo‘q',
+    'analytics.daily': 'Kunlik',
+    'analytics.weekly': 'Haftalik',
+    'analytics.monthly': 'Oylik',
+    'analytics.yearly': 'Yillik',
 
-    "pagination.page": "Sahifa",
-    "pagination.of": "dan",
+    'time.minutesAgo': 'daqiqa oldin',
+    'time.hoursAgo': 'soat oldin',
+    'time.daysAgo': 'kun oldin',
 
-    "logout.success": "Chiqildi",
-    "logout.successMessage": "Siz tizimdan muvaffaqiyatli chiqdingiz",
-    "logout.error": "Chiqishda xatolik",
-    "logout.errorFallback": "Tizimdan chiqarildingiz, ammo xatolik yuz berdi"
+    'pagination.page': 'Sahifa',
+    'pagination.of': 'dan',
+
+    'logout.success': 'Chiqildi',
+    'logout.successMessage': 'Siz tizimdan muvaffaqiyatli chiqdingiz',
+    'logout.error': 'Chiqishda xatolik',
+    'logout.errorFallback': 'Tizimdan chiqarildingiz, ammo xatolik yuz berdi',
   },
 
   ru: {
@@ -131,6 +165,23 @@ const translations = {
     'dashboard.sales': 'Продажи',
     'dashboard.deals': 'Сделки',
     'dashboard.conversion': 'Конверсия',
+    'dashboard.lastMonth': 'по сравнению с прошлым месяцем',
+
+    'login.title': 'Вход в CRM Систему',
+    'login.description': 'Введите email и пароль для входа в аккаунт',
+    'login.email': 'Email адрес',
+    'login.password': 'Пароль',
+    'login.button': 'Войти в Систему',
+    'login.loading': 'Вход...',
+    'login.error': 'Неверный email или пароль. Попробуйте снова.',
+    'login.demo': 'Демо аккаунт:',
+
+    'common.yes': 'Да',
+    'common.no': 'Нет',
+    'common.close': 'Закрыть',
+    'common.cancel': 'Отмена',
+    'common.save': 'Сохранить',
+    'common.tryAgain': 'Попробуйте снова',
 
     'tabs.customers': 'Клиенты',
     'tabs.deals': 'Сделки',
@@ -147,7 +198,7 @@ const translations = {
     'customers.tryAgain': 'Пожалуйста, попробуйте снова',
     'customers.noCustomers': 'Клиенты не найдены',
     'customers.addYourFirst': 'Добавьте первого клиента, чтобы начать',
-    'customers.value': 'Ценность клиента',
+    'customers.value': 'Ценность',
     'customers.saveSuccess': 'Клиент сохранён',
     'customers.addSuccess': 'Клиент успешно добавлен',
     'customers.updateSuccess': 'Клиент успешно обновлён',
@@ -155,6 +206,19 @@ const translations = {
     'customers.deleteSuccess': 'Клиент удалён',
     'customers.wasDeleted': 'успешно удалён',
     'customers.deleteError': 'Ошибка при удалении клиента',
+    'customers.addTitle': 'Добавить нового клиента',
+    'customers.name': 'Имя',
+    'customers.email': 'Электронная почта',
+    'customers.phone': 'Телефон',
+    'customers.company': 'Компания',
+    'customers.status': 'Статус',
+    'customers.actions': 'Действия',
+    'customers.edit': 'Редактировать',
+    'customers.delete': 'Удалить',
+    'customers.save': 'Сохранить',
+    'customers.cancel': 'Отмена',
+    'customers.editTitle': 'Редактировать клиента',
+    'customers.deleteConfirm': 'Вы уверены, что хотите удалить этого клиента?',
 
     'status.active': 'Активный',
     'status.potential': 'Потенциальный',
@@ -177,6 +241,14 @@ const translations = {
     'deals.deleteSuccess': 'Сделка удалена',
     'deals.wasDeleted': 'Сделка была успешно удалена',
     'deals.deleteError': 'Ошибка при удалении сделки',
+    'deals.addTitle': 'Добавить новую сделку',
+    'deals.editTitle': 'Редактировать сделку',
+    'deals.title': 'Название',
+    'deals.description': 'Описание',
+    'deals.status': 'Статус',
+    'deals.selectStatus': 'Выберите статус',
+    'deals.customer': 'Клиент',
+    'deals.selectCustomer': 'Выберите клиента',
 
     'dealStatus.new': 'Новая',
     'dealStatus.in_progress': 'В процессе',
@@ -222,10 +294,6 @@ const translations = {
     'time.hoursAgo': 'часов назад',
     'time.daysAgo': 'дней назад',
 
-    'common.cancel': 'Отмена',
-    'common.save': 'Сохранить',
-    'common.tryAgain': 'Попробуйте снова',
-
     'pagination.page': 'Страница',
     'pagination.of': 'из',
 
@@ -243,6 +311,23 @@ const translations = {
     'dashboard.sales': 'Sales',
     'dashboard.deals': 'Deals',
     'dashboard.conversion': 'Conversion',
+    'dashboard.lastMonth': 'compared to last month',
+
+    'login.title': 'Login to CRM System',
+    'login.description': 'Enter your email and password to access your account',
+    'login.email': 'Email address',
+    'login.password': 'Password',
+    'login.button': 'Login to System',
+    'login.loading': 'Logging in...',
+    'login.error': 'Invalid email or password. Please try again.',
+    'login.demo': 'Demo account:',
+
+    'common.yes': 'Yes',
+    'common.no': 'No',
+    'common.close': 'Close',
+    'common.cancel': 'Cancel',
+    'common.save': 'Save',
+    'common.tryAgain': 'Please try again',
 
     'tabs.customers': 'Customers',
     'tabs.deals': 'Deals',
@@ -259,7 +344,7 @@ const translations = {
     'customers.tryAgain': 'Please try again',
     'customers.noCustomers': 'No customers found',
     'customers.addYourFirst': 'Add your first customer to get started',
-    'customers.value': 'Customer value',
+    'customers.value': 'Level',
     'customers.saveSuccess': 'Customer saved',
     'customers.addSuccess': 'Customer added successfully',
     'customers.updateSuccess': 'Customer updated successfully',
@@ -267,6 +352,19 @@ const translations = {
     'customers.deleteSuccess': 'Customer deleted',
     'customers.wasDeleted': 'was deleted successfully',
     'customers.deleteError': 'Failed to delete customer',
+    'customers.addTitle': 'Add New Customer',
+    'customers.name': 'Name',
+    'customers.email': 'Email',
+    'customers.phone': 'Phone',
+    'customers.company': 'Company',
+    'customers.status': 'Status',
+    'customers.actions': 'Actions',
+    'customers.edit': 'Edit',
+    'customers.delete': 'Delete',
+    'customers.save': 'Save',
+    'customers.cancel': 'Cancel',
+    'customers.editTitle': 'Edit Customer',
+    'customers.deleteConfirm': 'Are you sure you want to delete this customer?',
 
     'status.active': 'Active',
     'status.potential': 'Potential',
@@ -289,6 +387,14 @@ const translations = {
     'deals.deleteSuccess': 'Deal deleted',
     'deals.wasDeleted': 'Deal was deleted successfully',
     'deals.deleteError': 'Failed to delete deal',
+    'deals.addTitle': 'Add New Deal',
+    'deals.editTitle': 'Edit Deal',
+    'deals.title': 'Title',
+    'deals.description': 'Description',
+    'deals.status': 'Status',
+    'deals.selectStatus': 'Select status',
+    'deals.customer': 'Customer',
+    'deals.selectCustomer': 'Select customer',
 
     'dealStatus.new': 'New',
     'dealStatus.in_progress': 'In Progress',
@@ -334,10 +440,6 @@ const translations = {
     'time.hoursAgo': 'hours ago',
     'time.daysAgo': 'days ago',
 
-    'common.cancel': 'Cancel',
-    'common.save': 'Save',
-    'common.tryAgain': 'Please try again',
-
     'pagination.page': 'Page',
     'pagination.of': 'of',
 
@@ -348,38 +450,38 @@ const translations = {
   },
 };
 
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
+const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>("uz")
+  const [language, setLanguage] = useState<Language>('uz');
 
   useEffect(() => {
-    const savedLanguage = localStorage.getItem("crm-language") as Language
-    if (savedLanguage && ["uz", "ru", "en"].includes(savedLanguage)) {
-      setLanguage(savedLanguage)
+    const savedLanguage = localStorage.getItem('crm-language') as Language;
+    if (savedLanguage && ['uz', 'ru', 'en'].includes(savedLanguage)) {
+      setLanguage(savedLanguage);
     }
-  }, [])
+  }, []);
 
   const handleSetLanguage = (lang: Language) => {
-    setLanguage(lang)
-    localStorage.setItem("crm-language", lang)
-  }
+    setLanguage(lang);
+    localStorage.setItem('crm-language', lang);
+  };
 
   const t = (key: string): string => {
-    return translations[language][key as keyof (typeof translations)[typeof language]] || key
-  }
+    return translations[language][key as keyof (typeof translations)[typeof language]] || key;
+  };
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage: handleSetLanguage, t }}>
       {children}
     </LanguageContext.Provider>
-  )
+  );
 }
 
 export function useLanguage() {
-  const context = useContext(LanguageContext)
+  const context = useContext(LanguageContext);
   if (context === undefined) {
-    throw new Error("useLanguage must be used within a LanguageProvider")
+    throw new Error('useLanguage must be used within a LanguageProvider');
   }
-  return context
+  return context;
 }

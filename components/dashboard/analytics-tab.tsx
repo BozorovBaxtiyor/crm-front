@@ -8,6 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+// Tooltip komponentlarini import qilishni unutmang
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useLanguage } from '@/contexts/language-context';
 import { BarChart3 } from 'lucide-react';
 import { AnalyticsData, SalesAnalytics } from './types';
@@ -78,26 +80,48 @@ export function AnalyticsTab({
                 ) : analyticsData &&
                   analyticsData.salesTrend &&
                   analyticsData.salesTrend.length > 0 ? (
-                  <div className="h-64">
-                    <div className="h-full flex flex-col justify-end space-y-2">
-                      <div className="flex justify-between">
+                  <div className="h-64 flex items-end pb-4 px-2">
+                    {' '}
+                    {/* items-end va padding qo'shildi */}
+                    <TooltipProvider>
+                      {' '}
+                      {/* TooltipProvider qo'shildi */}
+                      <div className="flex flex-1 justify-around items-end h-full gap-x-2">
+                        {' '}
+                        {/* gap-x-2 va items-end, flex-1 qo'shildi */}
                         {analyticsData.salesTrend.map((item, index) => (
-                          <div key={index} className="flex flex-col items-center">
-                            <div
-                              className="bg-blue-600 w-8"
-                              style={{
-                                height: `${
-                                  (item.sales /
-                                    Math.max(...analyticsData.salesTrend.map(i => i.sales))) *
-                                  200
-                                }px`,
-                              }}
-                            ></div>
-                            <span className="text-xs mt-1">{item.month}</span>
-                          </div>
+                          <Tooltip key={index}>
+                            {' '}
+                            {/* Har bir bar uchun Tooltip */}
+                            <TooltipTrigger asChild>
+                              <div className="flex flex-col items-center justify-end h-full flex-grow mx-1">
+                                {' '}
+                                {/* mx-1 va flex-grow qo'shildi */}
+                                <div
+                                  className="bg-blue-600 w-8 rounded-t-sm" // rounded-t-sm qo'shildi
+                                  style={{
+                                    height: `${
+                                      (item.sales /
+                                        Math.max(...analyticsData.salesTrend.map(i => i.sales))) *
+                                      200 // Maksimal balandlikni 200px da saqlaymiz
+                                    }px`,
+                                  }}
+                                ></div>
+                                <span className="text-xs mt-1 text-gray-600 font-medium">
+                                  {item.month}
+                                </span>{' '}
+                                {/* Rang va font o'zgartirildi */}
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-sm font-medium">
+                                {t('analytics.sales')}: ${item.sales.toLocaleString()}
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
                         ))}
                       </div>
-                    </div>
+                    </TooltipProvider>
                   </div>
                 ) : (
                   <div className="h-64 flex items-center justify-center bg-gray-50 rounded">

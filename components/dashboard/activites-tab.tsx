@@ -9,7 +9,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from 'lucide@/components/ui/select';
+} from '@/components/ui/select';
 import {
   ChevronLeft,
   ChevronRight,
@@ -19,9 +19,9 @@ import {
   Plus,
   RefreshCw,
 } from 'lucide-react';
-import { useLanguage } from '@@/contexts/language-context';
+import { useLanguage } from '@/contexts/language-context';
 import { Activity } from './types';
-import { getActivityIcon } from '@/lib/utils';
+import { getActivityIcon } from '@/lib/utils1';
 
 interface ActivitiesTabProps {
   activities: Activity[];
@@ -32,7 +32,7 @@ interface ActivitiesTabProps {
   activityCurrentPage: number;
   activityTotalPages: number;
   fetchActivities: (page?: number, type?: string | null) => Promise<void>;
-  setIsAddActivityModalOpen: (value: boolean) => void;
+  // setIsAddActivityModalOpen: (value: boolean) => void;
   getActivityTypeColor: (type: string) => string;
   formatActivityTime: (dateString: string) => string;
 }
@@ -46,7 +46,7 @@ export function ActivitiesTab({
   activityCurrentPage,
   activityTotalPages,
   fetchActivities,
-  setIsAddActivityModalOpen,
+  // setIsAddActivityModalOpen,
   getActivityTypeColor,
   formatActivityTime,
 }: ActivitiesTabProps) {
@@ -58,7 +58,7 @@ export function ActivitiesTab({
         <div className="flex space-x-2 flex-1">
           <Select
             value={activityTypeFilter || 'all'}
-            onValueChange={val => setActivityTypeFilter(val === 'all' ? null : val)}
+            onValueChange={(val: string) => setActivityTypeFilter(val === 'all' ? null : val)}
           >
             <SelectTrigger className="w-40">
               <SelectValue placeholder={t('activities.filterByType')} />
@@ -75,13 +75,13 @@ export function ActivitiesTab({
             <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
-        <Button
+        {/* <Button
           className="bg-blue-600 hover:bg-blue-700"
           onClick={() => setIsAddActivityModalOpen(true)}
         >
           <Plus className="w-4 h-4 mr-2" />
           {t('activities.addNew')}
-        </Button>
+        </Button> */}
       </div>
       <Card>
         <CardHeader>
@@ -105,10 +105,10 @@ export function ActivitiesTab({
               <Clock className="h-12 w-12 text-gray-400 mx-auto mb-3" />
               <h3 className="text-lg font-medium">{t('activities.noActivities')}</h3>
               <p className="text-gray-500">{t('activities.addYourFirst')}</p>
-              <Button className="mt-4" onClick={() => setIsAddActivityModalOpen(true)}>
+              {/* <Button className="mt-4" onClick={() => setIsAddActivityModalOpen(true)}>
                 <Plus className="w-4 h-4 mr-2" />
                 {t('activities.addNew')}
-              </Button>
+              </Button> */}
             </div>
           ) : (
             <div className="space-y-4">

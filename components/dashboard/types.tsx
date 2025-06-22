@@ -8,7 +8,7 @@ export interface Customer {
   company: string;
   email: string;
   phone: string;
-  status: string;
+  status: 'active' | 'potential' | 'waiting'; // string o'rniga aniq qiymatlar
   value: string;
 }
 
@@ -16,12 +16,16 @@ export interface Deal {
   id: number;
   title: string;
   description: string;
-  status: string;
+  status: 'new' | 'in_progress' | 'completed' | 'cancelled'; // string o'rniga aniq qiymatlar
   value: number;
   customer?: Customer;
+  customerId: number; // Added missing property
+
   createdAt?: string;
   updatedAt?: string;
 }
+
+
 
 export interface Activity {
   id: number;

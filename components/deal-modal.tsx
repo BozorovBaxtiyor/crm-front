@@ -13,12 +13,12 @@ import type { Deal } from "@/lib/api/deals"
 import type { Customer } from "@/components/customer-modal"
 
 interface DealModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onSave: (deal: Omit<Deal, "id"> | Deal) => void
-  deal?: Deal | null
-  mode?: "add" | "edit"
-  customerId?: number
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (dealData: any) => void;
+  deal?: Deal | null;
+  mode?: 'add' | 'edit';
+  customerId?: number;
 }
 
 export function DealModal({ isOpen, onClose, onSave, deal, mode = "add", customerId }: DealModalProps) {
@@ -69,10 +69,10 @@ export function DealModal({ isOpen, onClose, onSave, deal, mode = "add", custome
   }, [deal, mode, customerId])
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    
+    e.preventDefault();
+
     if (!title.trim()) {
-      return
+      return;
     }
 
     const dealData: any = {
@@ -80,15 +80,16 @@ export function DealModal({ isOpen, onClose, onSave, deal, mode = "add", custome
       description,
       value: parseFloat(value),
       status,
-      customerId: selectedCustomerId!
+      customerId: selectedCustomerId!,
+    };
+
+    if (mode === 'edit' && deal) {
+      dealData.id = deal.id;
     }
 
-    if (mode === "edit" && deal) {
-      dealData.id = deal.id
-    }
-
-    onSave(dealData)
-  }
+    onSave(dealData); // Promise qaytarmaslik
+    onClose(); // Modal yopish
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

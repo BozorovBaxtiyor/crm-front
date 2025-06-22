@@ -26,14 +26,11 @@ export async function fetchWithAuth(endpoint: string, options: RequestInit = {})
         throw new Error("No refresh token available")
       }
       
-      // Refresh token orqali yangi token olish
       const authData = await refreshToken(oldRefreshToken)
-      
-      // Yangi tokenlarni saqlash
+
       localStorage.setItem('authToken', authData.token)
       localStorage.setItem('refreshToken', authData.refreshToken)
       
-      // So'rovni yangi token bilan qayta yuborish
       headers.Authorization = `Bearer ${authData.token}`
       response = await fetch(`${getApiUrl(endpoint)}`, {
         ...options,
@@ -41,10 +38,10 @@ export async function fetchWithAuth(endpoint: string, options: RequestInit = {})
       })
     } catch (refreshError) {
       console.error("Token refresh failed:", refreshError)
-      // Token yangilash muvaffaqiyatsiz bo'lsa, foydalanuvchini chiqarib yuborish
+
       localStorage.removeItem('authToken')
       localStorage.removeItem('refreshToken')
-      window.location.href = "/" // Yoki login sahifasiga yo'naltirish
+      window.location.href = "/" 
       throw new Error("Authentication failed. Please login again.")
     }
   }
@@ -63,18 +60,19 @@ export async function fetchWithAuth(endpoint: string, options: RequestInit = {})
 
 export async function refreshToken(refreshToken: string) {
   try {
-    const response = await fetch(getApiUrl("/auth/refresh"), {
-      method: "POST",
+    const response = await fetch(getApiUrl('/auth/refresh'), {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json"
+        'Content-Type': 'application/json',
+        ...(refreshToken ? { Authorization: `Bearer ${refreshToken}` } : {}),
       },
-      body: JSON.stringify({ refreshToken })
-    })
+    });
 
     if (!response.ok) {
       throw new Error("Failed to refresh token")
     }
-
+    console.log("Token refresh response:", response);
+    
     const data = await response.json()
     return data.data
   } catch (error) {
@@ -82,3 +80,5 @@ export async function refreshToken(refreshToken: string) {
     throw error
   }
 }
+
+

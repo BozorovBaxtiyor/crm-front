@@ -1,4 +1,4 @@
-export const API_BASE_URL = 'http://170.64.141.16:3001' ;
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://lms.dev-baxa.me'; ;
 
 export const getImageUrl = ( imagePath : string) => {
   if (!imagePath) return '';

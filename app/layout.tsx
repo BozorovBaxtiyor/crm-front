@@ -7,8 +7,6 @@ import { LanguageProvider } from "@/contexts/language-context"
 import { ThemeProvider } from "@/components/theme-provider"
 import { useAuth } from '@/hooks/use-auth'
 
-// Static metadata is not supported in Client Components, so we remove it
-// Static metadata should be in a separate Server Component
 
 export default function RootLayout({
   children,
@@ -19,7 +17,6 @@ export default function RootLayout({
   const [isAuthChecking, setIsAuthChecking] = useState(true)
   
   useEffect(() => {
-    // Ilova ishga tushganida tokenni tekshirish
     const checkAuth = async () => {
       await checkAndRefreshToken()
       setIsAuthChecking(false)

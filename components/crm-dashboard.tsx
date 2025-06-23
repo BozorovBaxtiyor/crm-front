@@ -14,7 +14,6 @@ import { DollarSign, Target, TrendingUp, Users } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { ActivitiesTab } from './dashboard/activites-tab';
-import { AddActivityModal } from './dashboard/add-activity-modal';
 import { AnalyticsTab } from './dashboard/analytics-tab';
 import { CustomersTab } from './dashboard/customers-tab';
 import { DealsTab } from './dashboard/deals-tab';
@@ -187,13 +186,16 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
     page = currentPage,
     searchQuery = searchTerm,
     status = statusFilter,
+    limit = itemsPerPage,
   ) => {
     setIsCustomersLoading(true);
     setCustomersError('');
     try {
+      console.log(limit , 'this is limit in fetchCustomers');
+      
       const params = new URLSearchParams();
       params.append('page', page.toString());
-      params.append('limit', itemsPerPage.toString());
+      params.append('limit', limit.toString() || '10'); // Default limit if not provided
       if (searchQuery) params.append('search', searchQuery);
       if (status) params.append('status', status);
 
@@ -217,11 +219,15 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
     }
   };
 
-  const fetchActivities = async (page = activityCurrentPage, type = activityTypeFilter) => {
+  const fetchActivities = async (
+    page = activityCurrentPage,
+    type = activityTypeFilter,
+    limit = itemsPerPage,
+  ) => {
     setIsActivitiesLoading(true);
     setActivitiesError('');
     try {
-      const params: any = { page, limit: 10 };
+      const params: any = { page, limit };
       if (type) params.type = type;
       const response = await getActivities(params);
       setActivities(response.data.activities);
@@ -339,17 +345,18 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
     }
   };
 
-  const fetchDeals = async (page = currentPage, status = statusFilter) => {
+  const fetchDeals = async (page = currentPage, status = statusFilter, limit=itemsPerPage) => {
     setIsDealsLoading(true);
     setDealsError('');
     try {
-      const params: any = { page, limit: 10 };
+      const params: any = { page, limit: limit || 10 };
       if (status) params.status = status;
       const response = await getDeals(params);
       setDeals(response.data.deals);
       const pagination = response.data.pagination;
       setCurrentPage(pagination.currentPage);
       setTotalPages(pagination.totalPages);
+      setItemsPerPage(limit)
     } catch (error) {
       console.error('Failed to fetch deals:', error);
       setDealsError(t('deals.fetchError'));
@@ -382,7 +389,7 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
         title: t('deals.deleteSuccess'),
         description: t('deals.wasDeleted'),
       });
-      fetchDeals(currentPage);
+      fetchDeals(currentPage, statusFilter, itemsPerPage);
     } catch (error) {
       console.error('Failed to delete deal:', error);
       toast({
@@ -393,33 +400,33 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
     }
   };
 
-  const handleSaveDeal = async (dealData: Deal | Omit<Deal, 'id'>) => {
-    try {
-      if (modalMode === 'add') {
-        await createDeal(dealData as Omit<Deal, 'id' | 'createdAt' | 'updatedAt'>);
-        toast({
-          title: t('deals.saveSuccess'),
-          description: t('deals.addSuccess'),
-        });
-      } else {
-        const id = (dealData as Deal).id;
-        await updateDeal(id, dealData as Partial<Omit<Deal, 'id' | 'createdAt' | 'updatedAt'>>);
-        toast({
-          title: t('deals.saveSuccess'),
-          description: t('deals.updateSuccess'),
-        });
-      }
-      setIsModalOpen(false);
-      fetchDeals(currentPage);
-    } catch (error) {
-      console.error('Failed to save deal:', error);
-      toast({
-        title: t('deals.saveError'),
-        description: t('common.tryAgain'),
-        variant: 'destructive',
-      });
-    }
-  };
+  // const handleSaveDeal = async (dealData: Deal | Omit<Deal, 'id'>) => {
+  //   try {
+  //     if (modalMode === 'add') {
+  //       await createDeal(dealData as Omit<Deal, 'id' | 'createdAt' | 'updatedAt'>);
+  //       toast({
+  //         title: t('deals.saveSuccess'),
+  //         description: t('deals.addSuccess'),
+  //       });
+  //     } else {
+  //       const id = (dealData as Deal).id;
+  //       await updateDeal(id, dealData as Partial<Omit<Deal, 'id' | 'createdAt' | 'updatedAt'>>);
+  //       toast({
+  //         title: t('deals.saveSuccess'),
+  //         description: t('deals.updateSuccess'),
+  //       });
+  //     }c
+  //     setIsModalOpen(false);
+  //     fetchDeals(currentPage);
+  //   } catch (error) {
+  //     console.error('Failed to save deal:', error);
+  //     toast({
+  //       title: t('deals.saveError'),
+  //       description: t('common.tryAgain'),
+  //       variant: 'destructive',
+  //     });
+  //   }
+  // };
 
   const handleAddCustomer = () => {
     setSelectedCustomer(null);
@@ -538,14 +545,14 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
 
   useEffect(() => {
     if (activeFeaturesTab === 'deals') {
-      fetchDeals();
+      fetchDeals(currentPage, statusFilter, itemsPerPage);
     }
   }, [activeFeaturesTab]);
 
   useEffect(() => {
     if (activeFeaturesTab === 'deals') {
       const delayDebounce = setTimeout(() => {
-        fetchDeals(1, statusFilter);
+        fetchDeals(1, statusFilter, itemsPerPage);
       }, 500);
       return () => clearTimeout(delayDebounce);
     }
@@ -611,6 +618,8 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
               handleDeleteDeal={handleDeleteDeal}
               getStatusColor={getStatusColor}
               customers={customers}
+              setDealLimit={setItemsPerPage}
+              dealLimit={itemsPerPage}
             />
           </TabsContent>
           <TabsContent value="activities">
@@ -623,7 +632,8 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
               activityCurrentPage={activityCurrentPage}
               activityTotalPages={activityTotalPages}
               fetchActivities={fetchActivities}
-              // setIsAddActivityModalOpen={setIsAddActivityModalOpen}
+              activityLimit={itemsPerPage}
+              setActivityLimit={setItemsPerPage}
               getActivityTypeColor={getActivityTypeColor}
               formatActivityTime={formatActivityTime}
             />
@@ -656,18 +666,6 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
         onConfirm={handleConfirmDelete}
         customerName={selectedCustomer?.name || ''}
       />
-      {/* <AddActivityModal
-        // isOpen={isAddActivityModalOpen}
-        // onClose={() => setIsAddActivityModalOpen(false)}
-        activityType={activityType}
-        setActivityType={setActivityType}
-        activityDescription={activityDescription}
-        setActivityDescription={setActivityDescription}
-        activityCustomerId={activityCustomerId}
-        setActivityCustomerId={setActivityCustomerId}
-        handleAddActivity={handleAddActivity}
-        customers={customers}
-      /> */}
     </div>
   );
 }

@@ -1,5 +1,4 @@
 // /home/baxa/crm/crm-front/components/dashboard/DealsTab.tsx
-import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,10 +9,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, DollarSign, Edit, Plus, RefreshCw, Trash2, Users } from 'lucide-react';
 import { useLanguage } from '@/contexts/language-context';
+import { DollarSign, RefreshCw, Users } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Pagination } from './pagination';
 import { Customer, Deal } from './types';
-import { DealModal } from '../deal-modal';
 
 interface DealsTabProps {
   deals: Deal[];
@@ -23,7 +23,9 @@ interface DealsTabProps {
   setDealStatusFilter: (value: string | null) => void;
   currentPage: number;
   totalPages: number;
-  fetchDeals: (page?: number, status?: string | null) => Promise<void>;
+  dealLimit?: number;
+  setDealLimit: (limit: number) => void;
+  fetchDeals: (page?: number, status?: string | null, limit?: number) => Promise<void>;
   handleAddDeal: (deal: Omit<Deal, 'id' | 'createdAt' | 'updatedAt'>) => void;
   handleEditDeal: (deal: Deal) => void;
   handleDeleteDeal: (dealId: number) => Promise<void>;
@@ -32,15 +34,17 @@ interface DealsTabProps {
 }
 
 export function DealsTab({
+  currentPage,
   deals,
   isDealsLoading,
   dealsError,
   dealStatusFilter,
   setDealStatusFilter,
-  currentPage,
   totalPages,
   fetchDeals,
+  dealLimit,
   handleAddDeal,
+  setDealLimit,
   handleDeleteDeal,
   handleEditDeal,
   customers,
@@ -89,6 +93,9 @@ export function DealsTab({
         return 'bg-gray-100 text-gray-800'; // Default case for any unexpected status
     }
   };
+  useEffect(() => {
+    console.log('Current dealLimit:', dealLimit);
+  }, [dealLimit]);
 
   return (
     <div className="space-y-6">
@@ -114,10 +121,6 @@ export function DealsTab({
             <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
-        {/* <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleAddNewDeal}>
-          <Plus className="w-4 h-4 mr-2" />
-          {t('deals.addNew')}
-        </Button> */}
       </div>
 
       {/* Deals List */}
@@ -145,10 +148,6 @@ export function DealsTab({
               <DollarSign className="h-12 w-12 text-gray-400 mx-auto mb-3" />
               <h3 className="text-lg font-medium">{t('deals.noDeals')}</h3>
               <p className="text-gray-500">{t('deals.addYourFirst')}</p>
-              {/* <Button className="mt-4" onClick={handleAddNewDeal}>
-                <Plus className="w-4 h-4 mr-2" />
-                {t('deals.addNew')}
-              </Button> */}
             </div>
           ) : (
             <div className="space-y-4">
@@ -179,81 +178,28 @@ export function DealsTab({
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">{t('deals.value')}</p>
                     </div>
-                    <div className="flex space-x-2">
-                      {/* <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEditDealLocal(deal)}
-                        className="bg-background"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteDeal(deal.id)}
-                        className="bg-background text-red-600 hover:text-red-blue700"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button> */}
-                    </div>
                   </div>
                 </div>
               ))}
               {/* TotalPages */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between py-4">
-                  <div className="flex items-center space-x-sm2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => fetchDeals(currentPage)}
-                      disabled={currentPage <= 1}
-                    >
-                      <ChevronsLeft className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => fetchDeals(currentPage - 1)}
-                      disabled={currentPage <= 1}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    <span className="text-sm px-4">
-                      {t('pagination')} {currentPage} {t('pagination.of')} {totalPages}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => fetchDeals(currentPage + 1)}
-                      disabled={currentPage >= totalPages}
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => fetchDeals(totalPages)}
-                      disabled={currentPage >= totalPages}
-                    >
-                      <ChevronsRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
+              {totalPages >= 1 && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  limit={dealLimit ?? 10}
+                  limits={[10, 25, 50, 100]} // Limit variantlari
+                  onPageChange={page => fetchDeals(page, null, dealLimit)}
+                  onLimitChange={limit => {
+                    console.log('Selected limit:', limit);
+                    setDealLimit(limit);
+                    fetchDeals(1, null, limit);
+                  }}
+                />
               )}
             </div>
           )}
         </CardContent>
       </Card>
-      {/* <DealModal
-        isOpen={isDealModalOpen}
-        onClose={() => setIsDealModalOpen(false)}
-        onSave={handleSaveLocal}
-        deal={selectedDeal}
-        mode={modalMode}
-        customerId={selectedDeal?.customerId || undefined}
-      /> */}
     </div>
   );
 }

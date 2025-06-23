@@ -1,5 +1,4 @@
 // /home/baxa/crm/crm-front/components/dashboard/CustomersTab.tsx
-import { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,21 +11,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  Edit,
-  Mail,
-  Phone,
-  Plus,
-  RefreshCw,
-  Search,
-  Trash2,
-  Users,
-} from 'lucide-react';
 import { useLanguage } from '@/contexts/language-context';
+import { Edit, Mail, Phone, Plus, RefreshCw, Search, Trash2, Users } from 'lucide-react';
+import { useState } from 'react';
+import { Pagination } from './pagination';
 import { Customer } from './types';
 
 interface CustomersTabProps {
@@ -39,7 +27,12 @@ interface CustomersTabProps {
   setStatusFilter: (value: string | null) => void;
   currentPage: number;
   totalPages: number;
-  fetchCustomers: (page?: number, searchQuery?: string, status?: string | null) => Promise<void>;
+  fetchCustomers: (
+    page?: number,
+    searchQuery?: string,
+    status?: string | null,
+    limit?: number,
+  ) => Promise<void>;
   handleAddCustomer: () => void;
   handleEditCustomer: (customer: Customer) => void;
   handleDeleteCustomer: (customer: Customer) => void;
@@ -62,6 +55,7 @@ export function CustomersTab({
   handleDeleteCustomer,
   getStatusColor,
 }: CustomersTabProps) {
+  const [customerLimit, setCustomerLimit] = useState(10); // Default limit
   const { t } = useLanguage();
 
   return (
@@ -202,44 +196,20 @@ export function CustomersTab({
               ))}
 
               {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center space-x-2 pt-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fetchCustomers(1)}
-                    disabled={currentPage <= 1}
-                  >
-                    <ChevronsLeft className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fetchCustomers(currentPage - 1)}
-                    disabled={currentPage <= 1}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <span className="text-sm px-4">
-                    {t('pagination.page')} {currentPage} {t('pagination.of')} {totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fetchCustomers(currentPage + 1)}
-                    disabled={currentPage >= totalPages}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fetchCustomers(totalPages)}
-                    disabled={currentPage >= totalPages}
-                  >
-                    <ChevronsRight className="h-4 w-4" />
-                  </Button>
-                </div>
+              {totalPages >= 1 && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  limit={customerLimit}
+                  limits={[10, 25, 50, 100]} // Limit variantlari
+                  onPageChange={page =>
+                    fetchCustomers(page, searchTerm, statusFilter, customerLimit)
+                  }
+                  onLimitChange={limit => {
+                    setCustomerLimit(limit);
+                    fetchCustomers(currentPage, searchTerm, statusFilter, limit);
+                  }}
+                />
               )}
             </div>
           )}

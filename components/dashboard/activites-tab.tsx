@@ -1,5 +1,4 @@
 // /home/baxa/crm/crm-front/components/dashboard/ActivitiesTab.tsx
-import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,18 +9,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useLanguage } from '@/contexts/language-context';
+import { getActivityIcon } from '@/lib/utils1';
 import {
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
   Clock,
-  Plus,
   RefreshCw,
-} from 'lucide-react';
-import { useLanguage } from '@/contexts/language-context';
+} from 'lucide-react'; 
+import { Pagination } from './pagination';
 import { Activity } from './types';
-import { getActivityIcon } from '@/lib/utils1';
 
 interface ActivitiesTabProps {
   activities: Activity[];
@@ -31,8 +30,9 @@ interface ActivitiesTabProps {
   setActivityTypeFilter: (value: string | null) => void;
   activityCurrentPage: number;
   activityTotalPages: number;
-  fetchActivities: (page?: number, type?: string | null) => Promise<void>;
-  // setIsAddActivityModalOpen: (value: boolean) => void;
+  activityLimit?: number;
+  setActivityLimit: (limit: number) => void;
+  fetchActivities: (page?: number, type?: string | null, limit?: number) => Promise<void>;
   getActivityTypeColor: (type: string) => string;
   formatActivityTime: (dateString: string) => string;
 }
@@ -46,9 +46,10 @@ export function ActivitiesTab({
   activityCurrentPage,
   activityTotalPages,
   fetchActivities,
-  // setIsAddActivityModalOpen,
   getActivityTypeColor,
   formatActivityTime,
+  activityLimit,
+  setActivityLimit,
 }: ActivitiesTabProps) {
   const { t } = useLanguage();
 
@@ -75,13 +76,6 @@ export function ActivitiesTab({
             <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
-        {/* <Button
-          className="bg-blue-600 hover:bg-blue-700"
-          onClick={() => setIsAddActivityModalOpen(true)}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          {t('activities.addNew')}
-        </Button> */}
       </div>
       <Card>
         <CardHeader>
@@ -105,10 +99,6 @@ export function ActivitiesTab({
               <Clock className="h-12 w-12 text-gray-400 mx-auto mb-3" />
               <h3 className="text-lg font-medium">{t('activities.noActivities')}</h3>
               <p className="text-gray-500">{t('activities.addYourFirst')}</p>
-              {/* <Button className="mt-4" onClick={() => setIsAddActivityModalOpen(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                {t('activities.addNew')}
-              </Button> */}
             </div>
           ) : (
             <div className="space-y-4">
@@ -138,45 +128,18 @@ export function ActivitiesTab({
                 </div>
               ))}
               {/* Pagination */}
-              {activityTotalPages > 1 && (
-                <div className="flex items-center justify-center space-x-2 pt-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fetchActivities(1)}
-                    disabled={activityCurrentPage <= 1}
-                  >
-                    <ChevronsLeft className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fetchActivities(activityCurrentPage - 1)}
-                    disabled={activityCurrentPage <= 1}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <span className="text-sm px-4">
-                    {t('pagination.page')} {activityCurrentPage} {t('pagination.of')}{' '}
-                    {activityTotalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fetchActivities(activityCurrentPage + 1)}
-                    disabled={activityCurrentPage >= activityTotalPages}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fetchActivities(activityTotalPages)}
-                    disabled={activityCurrentPage >= activityTotalPages}
-                  >
-                    <ChevronsRight className="h-4 w-4" />
-                  </Button>
-                </div>
+              {activityTotalPages >= 1 && (
+                <Pagination
+                  currentPage={activityCurrentPage}
+                  totalPages={activityTotalPages}
+                  limit={activityLimit ?? 10}
+                  limits={[10, 25, 50, 100]} // Limit variantlari
+                  onPageChange={page => fetchActivities(page, null, activityLimit)}
+                  onLimitChange={limit => {
+                    setActivityLimit(limit);
+                    fetchActivities(1, null, limit);
+                  }}
+                />
               )}
             </div>
           )}

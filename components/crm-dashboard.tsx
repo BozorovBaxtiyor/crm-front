@@ -9,7 +9,7 @@ import { toast } from '@/hooks/use-toast';
 import { fetchWithAuth } from '@/lib/api';
 import { createActivity, getActivities } from '@/lib/api/activities';
 import { getDashboardAnalytics, getSalesAnalytics } from '@/lib/api/analytics';
-import { createDeal, deleteDeal, getDeals, updateDeal } from '@/lib/api/deals';
+import { deleteDeal, getDeals } from '@/lib/api/deals';
 import { DollarSign, Target, TrendingUp, Users } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -191,21 +191,19 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
     setIsCustomersLoading(true);
     setCustomersError('');
     try {
-      console.log(limit , 'this is limit in fetchCustomers');
-      
       const params = new URLSearchParams();
-      params.append('page', page.toString());
+      if (page) params.append('page', page.toString());
       params.append('limit', limit.toString() || '10'); // Default limit if not provided
       if (searchQuery) params.append('search', searchQuery);
       if (status) params.append('status', status);
 
-      const response = await fetchWithAuth(`/customers?${params}`);
+      const response = await fetchWithAuth(`/customers?${params.toString()}`);
       setCustomers(response.data.customers);
       const pagination = response.data.pagination;
-      setCurrentPage(pagination.currentPage);
-      setTotalPages(pagination.totalPages);
-      setTotalItems(pagination.totalItems);
-      setItemsPerPage(pagination.itemsPerPage);
+      setCurrentPage(Number(pagination.currentPage));
+      setTotalPages(Number(pagination.totalPages));
+      setTotalItems(Number(pagination.totalItems));
+      setItemsPerPage(Number(pagination.itemsPerPage));
     } catch (error) {
       console.error('Failed to fetch customers:', error);
       setCustomersError(t('customers.fetchError'));
@@ -233,8 +231,8 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
       setActivities(response.data.activities);
       if (response.data.pagination) {
         const pagination = response.data.pagination;
-        setActivityCurrentPage(pagination.currentPage);
-        setActivityTotalPages(pagination.totalPages);
+        setActivityCurrentPage(Number(pagination.currentPage));
+        setActivityTotalPages(Number(pagination.totalPages));
       }
     } catch (error) {
       console.error('Failed to fetch activities:', error);
@@ -345,7 +343,7 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
     }
   };
 
-  const fetchDeals = async (page = currentPage, status = statusFilter, limit=itemsPerPage) => {
+  const fetchDeals = async (page = currentPage, status = statusFilter, limit = itemsPerPage) => {
     setIsDealsLoading(true);
     setDealsError('');
     try {
@@ -354,9 +352,9 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
       const response = await getDeals(params);
       setDeals(response.data.deals);
       const pagination = response.data.pagination;
-      setCurrentPage(pagination.currentPage);
-      setTotalPages(pagination.totalPages);
-      setItemsPerPage(limit)
+      setCurrentPage(Number(pagination.currentPage));
+      setTotalPages(Number(pagination.totalPages));
+      setItemsPerPage(limit);
     } catch (error) {
       console.error('Failed to fetch deals:', error);
       setDealsError(t('deals.fetchError'));

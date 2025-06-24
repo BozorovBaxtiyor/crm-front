@@ -94,8 +94,8 @@ export function DealsTab({
     }
   };
   useEffect(() => {
-    console.log('Current dealLimit:', dealLimit);
-  }, [dealLimit]);
+    fetchDeals(currentPage, dealStatusFilter, dealLimit);
+  }, [dealStatusFilter, dealLimit]);
 
   return (
     <div className="space-y-6">
@@ -117,7 +117,7 @@ export function DealsTab({
               <SelectItem value="cancelled">{t('dealStatus.cancelled')}</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" onClick={() => fetchDeals(currentPage)}>
+          <Button variant="outline" onClick={() => fetchDeals(currentPage , dealStatusFilter, dealLimit)}>
             <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
@@ -188,11 +188,10 @@ export function DealsTab({
                   totalPages={totalPages}
                   limit={dealLimit ?? 10}
                   limits={[10, 25, 50, 100]} // Limit variantlari
-                  onPageChange={page => fetchDeals(page, null, dealLimit)}
+                  onPageChange={page => fetchDeals(page, dealStatusFilter, dealLimit)}
                   onLimitChange={limit => {
-                    console.log('Selected limit:', limit);
                     setDealLimit(limit);
-                    fetchDeals(1, null, limit);
+                    fetchDeals(1, dealStatusFilter, limit);
                   }}
                 />
               )}

@@ -202,9 +202,9 @@ export function CustomersTab({
                   totalPages={totalPages}
                   limit={customerLimit}
                   limits={[10, 25, 50, 100]} // Limit variantlari
-                  onPageChange={page =>
-                    fetchCustomers(page, searchTerm, statusFilter, customerLimit)
-                  }
+                  onPageChange={page => {
+                    fetchCustomers(page, searchTerm, statusFilter, customerLimit);
+                  }}
                   onLimitChange={limit => {
                     setCustomerLimit(limit);
                     fetchCustomers(currentPage, searchTerm, statusFilter, limit);

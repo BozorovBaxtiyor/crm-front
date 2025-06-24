@@ -134,7 +134,7 @@ export function ActivitiesTab({
                   totalPages={activityTotalPages}
                   limit={activityLimit ?? 10}
                   limits={[10, 25, 50, 100]} // Limit variantlari
-                  onPageChange={page => fetchActivities(page, null, activityLimit)}
+                  onPageChange={page => fetchActivities(page, activityTypeFilter, activityLimit)}
                   onLimitChange={limit => {
                     setActivityLimit(limit);
                     fetchActivities(1, null, limit);

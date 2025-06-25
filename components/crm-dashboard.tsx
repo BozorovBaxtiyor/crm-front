@@ -147,22 +147,22 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
       case 'waiting':
         return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+        return 'bg-gray-100 text-[#1e1e2d] dark:bg-[#1e1e2d] dark:text-gray-300';
     }
   };
 
   const getActivityTypeColor = (type: string) => {
     switch (type) {
       case 'call':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200';
       case 'email':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-200';
       case 'meeting':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+        return 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200';
       case 'deal':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200';
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+        return 'bg-gray-100 text-[#1e1e2d] dark:bg-gray-700 dark:text-gray-200';
     }
   };
 
@@ -299,7 +299,7 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
           title: t('dashboard.sales'),
           value: `$${response.data.monthlySales.toLocaleString()}`,
           icon: DollarSign,
-          change: '+8%',
+          change: '+18%',
           color: 'text-green-600',
         },
         {

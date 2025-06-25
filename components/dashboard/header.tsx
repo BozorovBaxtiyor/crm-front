@@ -1,8 +1,8 @@
 // /home/baxa/crm/crm-front/components/dashboard/Header.tsx
-import { Building2, LogOut } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { ThemeLanguageSwitcher } from '@/components/theme-language-switcher';
+import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/language-context';
+import { Building2, LogOut } from 'lucide-react';
 
 interface HeaderProps {
   onLogout: () => void;
@@ -13,7 +13,7 @@ export function Header({ onLogout, isLoggingOut }: HeaderProps) {
   const { t } = useLanguage();
 
   return (
-    <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+    <header className="bg-white dark:bg-[#1e1e2d] border-b border-gray-200 dark:border-gray-700 px-6 py-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">

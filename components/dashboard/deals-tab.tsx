@@ -82,17 +82,18 @@ export function DealsTab({
   const getStatusColor = (status: Deal['status']): string => {
     switch (status) {
       case 'new':
-        return 'bg-blue-100 text-blue-800'; // New deals for blue
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'; // New deals
       case 'in_progress':
-        return 'bg-yellow-100 text-yellow-800'; // In progress deals for yellow
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'; // In progress
       case 'completed':
-        return 'bg-green-100 text-green-800'; // Completed deals for green
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'; // Completed
       case 'cancelled':
-        return 'bg-red-100 text-red-800'; // Cancelled deals for red
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'; // Cancelled
       default:
-        return 'bg-gray-100 text-gray-800'; // Default case for any unexpected status
+        return 'bg-gray-100 text-[#1e1e2d] dark:bg-[#1e1e2d] dark:text-gray-300'; // Fallback
     }
   };
+
   useEffect(() => {
     fetchDeals(currentPage, dealStatusFilter, dealLimit);
   }, [dealStatusFilter, dealLimit]);
@@ -117,7 +118,10 @@ export function DealsTab({
               <SelectItem value="cancelled">{t('dealStatus.cancelled')}</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" onClick={() => fetchDeals(currentPage , dealStatusFilter, dealLimit)}>
+          <Button
+            variant="outline"
+            onClick={() => fetchDeals(currentPage, dealStatusFilter, dealLimit)}
+          >
             <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
@@ -154,7 +158,7 @@ export function DealsTab({
               {deals.map(deal => (
                 <div
                   key={deal.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 dark:border-gray-700"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-[#1e1e2d] dark:border-gray-700"
                 >
                   <div className="mb-3 sm:mb-0">
                     <div className="flex items-center">

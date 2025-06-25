@@ -60,7 +60,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-[#1e1e2d] flex items-center justify-center p-4">
       <div className="absolute top-4 right-4">
         <ThemeLanguageSwitcher />
       </div>
@@ -116,7 +116,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             </Button>
           </form>
 
-          <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+          <div className="mt-6 p-4 bg-gray-50 dark:bg-[#1e1e2d] rounded-lg">
             <p className="text-sm text-gray-600 dark:text-gray-300 font-medium mb-2">
               {t('login.demo')}
             </p>

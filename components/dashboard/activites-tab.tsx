@@ -11,14 +11,7 @@ import {
 } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/language-context';
 import { getActivityIcon } from '@/lib/utils1';
-import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  Clock,
-  RefreshCw,
-} from 'lucide-react'; 
+import { Clock, RefreshCw } from 'lucide-react';
 import { Pagination } from './pagination';
 import { Activity } from './types';
 
@@ -105,7 +98,7 @@ export function ActivitiesTab({
               {activities.map(activity => (
                 <div
                   key={activity.id}
-                  className="flex items-center space-x-4 p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 dark:border-gray-700"
+                  className="flex items-center space-x-4 p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-[#1e1e2d] dark:border-gray-700"
                 >
                   <div className="p-2 bg-blue-100 rounded-full">
                     {getActivityIcon(activity.type)}

@@ -132,7 +132,7 @@ export function CustomersTab({
               {customers.map(customer => (
                 <div
                   key={customer.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 dark:border-gray-700"
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-[#1e1e2d] dark:border-gray-700"
                 >
                   <div className="flex items-center space-x-4">
                     <Avatar>

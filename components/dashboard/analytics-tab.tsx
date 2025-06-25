@@ -8,9 +8,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-// Tooltip komponentlarini import qilishni unutmang
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useLanguage } from '@/contexts/language-context';
+import { getSalesTrend } from '@/lib/api/analytics';
 import { BarChart3 } from 'lucide-react';
 import { AnalyticsData, SalesAnalytics } from './types';
 
@@ -28,6 +28,7 @@ interface AnalyticsTabProps {
     potential: number;
     waiting: number;
   }) => number;
+  setAnalyticsData:any;
 }
 
 export function AnalyticsTab({
@@ -40,8 +41,23 @@ export function AnalyticsTab({
   loadDashboardAnalytics,
   calculatePercentage,
   getTotalCustomers,
+  setAnalyticsData,
 }: AnalyticsTabProps) {
   const { t } = useLanguage();
+  const handlePeriodChange = async (value: 'daily' | 'weekly' | 'monthly' | 'yearly') => {
+    setSalesPeriod(value);
+    try {
+      const response = await getSalesTrend({ period: value });
+
+      // Kelgan ma'lumotlarni analyticsData ga qo'shish
+      setAnalyticsData((prevData: AnalyticsData | null) => ({
+        ...prevData,
+        salesTrend: response.data.salesTrend as { period: string; sales: number }[],
+      }));
+    } catch (error) {
+      console.error('Failed to fetch sales analytics:', error);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -55,7 +71,12 @@ export function AnalyticsTab({
       ) : (
         <>
           <div className="flex justify-end mb-4">
-            <Select value={salesPeriod} onValueChange={(value: any) => setSalesPeriod(value)}>
+            <Select
+              value={salesPeriod}
+              onValueChange={(value: 'daily' | 'weekly' | 'monthly' | 'yearly') =>
+                handlePeriodChange(value)
+              }
+            >
               <SelectTrigger className="w-32">
                 <SelectValue placeholder="Davr" />
               </SelectTrigger>
@@ -108,7 +129,7 @@ export function AnalyticsTab({
                                   }}
                                 ></div>
                                 <span className="text-xs mt-1 text-gray-600 font-medium">
-                                  {item.month}
+                                  {item.period}
                                 </span>{' '}
                                 {/* Rang va font o'zgartirildi */}
                               </div>

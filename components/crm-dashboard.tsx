@@ -645,6 +645,7 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
               salesPeriod={salesPeriod}
               setSalesPeriod={setSalesPeriod}
               loadDashboardAnalytics={loadDashboardAnalytics}
+              setAnalyticsData={setAnalyticsData}
               calculatePercentage={calculatePercentage}
               getTotalCustomers={getTotalCustomers}
             />

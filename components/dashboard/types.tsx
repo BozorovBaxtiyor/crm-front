@@ -36,7 +36,7 @@ export interface Activity {
 }
 
 export interface AnalyticsData {
-  salesTrend: { month: string; sales: number }[];
+  salesTrend: { period: string; sales: number }[];
   customersByStatus: { active: number; potential: number; waiting: number };
 }
 

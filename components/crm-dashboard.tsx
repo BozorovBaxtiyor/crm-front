@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLanguage } from '@/contexts/language-context';
 import { toast } from '@/hooks/use-toast';
 import { fetchWithAuth } from '@/lib/api';
-import { createActivity, getActivities } from '@/lib/api/activities';
+import { getActivities } from '@/lib/api/activities';
 import { getDashboardAnalytics, getSalesAnalytics } from '@/lib/api/analytics';
 import { deleteDeal, getDeals } from '@/lib/api/deals';
 import { DollarSign, Target, TrendingUp, Users } from 'lucide-react';
@@ -19,14 +19,7 @@ import { CustomersTab } from './dashboard/customers-tab';
 import { DealsTab } from './dashboard/deals-tab';
 import { Header } from './dashboard/header';
 import { StatsCards } from './dashboard/stats-cards';
-import {
-  Activity,
-  AnalyticsData,
-  CRMDashboardProps,
-  Deal,
-  SalesAnalytics,
-  Stat,
-} from './dashboard/types';
+import { Activity, AnalyticsData, CRMDashboardProps, Deal, SalesAnalytics, Stat } from './dashboard/types';
 
 export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
   const router = useRouter();
@@ -34,14 +27,11 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
   const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [analyticsLoading, setAnalyticsLoading] = useState(true);
   const [analyticsError, setAnalyticsError] = useState('');
   const [salesAnalytics, setSalesAnalytics] = useState<SalesAnalytics | null>(null);
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
-  const [salesPeriod, setSalesPeriod] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>(
-    'monthly',
-  );
+  const [salesPeriod, setSalesPeriod] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('daily');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
@@ -50,7 +40,6 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
   const [isCustomersLoading, setIsCustomersLoading] = useState(true);
   const [customersError, setCustomersError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
@@ -58,11 +47,11 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
   const [isActivitiesLoading, setIsActivitiesLoading] = useState(true);
   const [activitiesError, setActivitiesError] = useState('');
   const [activityTypeFilter, setActivityTypeFilter] = useState<string | null>(null);
-  // const [isAddActivityModalOpen, setIsAddActivityModalOpen] = useState(false);
-  const [activityDescription, setActivityDescription] = useState('');
-  const [activityType, setActivityType] = useState<'call' | 'email' | 'meeting' | 'deal'>('call');
-  const [activityCustomerId, setActivityCustomerId] = useState<number | null>(null);
   const [activityCurrentPage, setActivityCurrentPage] = useState(1);
+  const [dealCurrentPage, setDealCurrentPage] = useState(1);
+  const [customerCurrentPage, setCustomerCurrentPage] = useState(1);
+  const [customerTatalPage, setCustomerTotalPage] = useState(1);
+  const [dealTotalPage, setDealTotalPage] = useState(1);
   const [activityTotalPages, setActivityTotalPages] = useState(1);
   const [dealsError, setDealsError] = useState('');
   const [deals, setDeals] = useState<Deal[]>([]);
@@ -71,14 +60,12 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
   const [dealStatusFilter, setDealStatusFilter] = useState<string | null>(null);
   const [activeFeaturesTab, setActiveFeaturesTab] = useState(() => {
     if (typeof window !== 'undefined') {
-      // URL dan tab qiymatini olish
       const tabFromUrl = searchParams.get('tab');
       if (tabFromUrl) {
         localStorage.setItem('activeTab', tabFromUrl);
         return tabFromUrl;
       }
 
-      // LocalStorage dan olish
       const savedTab = localStorage.getItem('activeTab');
       return savedTab || 'customers';
     }
@@ -119,7 +106,6 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
     setActiveFeaturesTab(value);
     localStorage.setItem('activeTab', value);
 
-    // URL ni yangilash
     const url = new URL(window.location.href);
     url.searchParams.set('tab', value);
     router.push(url.pathname + url.search);
@@ -130,11 +116,7 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
     return Math.round((value / total) * 100);
   };
 
-  const getTotalCustomers = (customersByStatus: {
-    active: number;
-    potential: number;
-    waiting: number;
-  }): number => {
+  const getTotalCustomers = (customersByStatus: { active: number; potential: number; waiting: number }): number => {
     return customersByStatus.active + customersByStatus.potential + customersByStatus.waiting;
   };
 
@@ -200,8 +182,8 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
       const response = await fetchWithAuth(`/customers?${params.toString()}`);
       setCustomers(response.data.customers);
       const pagination = response.data.pagination;
-      setCurrentPage(Number(pagination.currentPage));
-      setTotalPages(Number(pagination.totalPages));
+      setCustomerCurrentPage(Number(pagination.currentPage));
+      setCustomerTotalPage(Number(pagination.totalPages));
       setTotalItems(Number(pagination.totalItems));
       setItemsPerPage(Number(pagination.itemsPerPage));
     } catch (error) {
@@ -217,11 +199,7 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
     }
   };
 
-  const fetchActivities = async (
-    page = activityCurrentPage,
-    type = activityTypeFilter,
-    limit = itemsPerPage,
-  ) => {
+  const fetchActivities = async (page = activityCurrentPage, type = activityTypeFilter, limit = itemsPerPage) => {
     setIsActivitiesLoading(true);
     setActivitiesError('');
     try {
@@ -244,40 +222,6 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
       });
     } finally {
       setIsActivitiesLoading(false);
-    }
-  };
-
-  const handleAddActivity = async () => {
-    try {
-      if (!activityDescription.trim() || !activityCustomerId) {
-        toast({
-          title: t('activities.validationError'),
-          description: t('activities.fillAllFields'),
-          variant: 'destructive',
-        });
-        return;
-      }
-      await createActivity({
-        type: activityType,
-        description: activityDescription,
-        customerId: activityCustomerId,
-      });
-      toast({
-        title: t('activities.addSuccess'),
-        description: t('activities.activityAdded'),
-      });
-      setActivityDescription('');
-      setActivityType('call');
-      setActivityCustomerId(null);
-      // setIsAddActivityModalOpen(false);
-      fetchActivities();
-    } catch (error) {
-      console.error('Failed to add activity:', error);
-      toast({
-        title: t('activities.addError'),
-        description: t('common.tryAgain'),
-        variant: 'destructive',
-      });
     }
   };
 
@@ -352,8 +296,8 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
       const response = await getDeals(params);
       setDeals(response.data.deals);
       const pagination = response.data.pagination;
-      setCurrentPage(Number(pagination.currentPage));
-      setTotalPages(Number(pagination.totalPages));
+      setDealCurrentPage(Number(pagination.currentPage));
+      setDealTotalPage(Number(pagination.totalPages));
       setItemsPerPage(limit);
     } catch (error) {
       console.error('Failed to fetch deals:', error);
@@ -397,34 +341,6 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
       });
     }
   };
-
-  // const handleSaveDeal = async (dealData: Deal | Omit<Deal, 'id'>) => {
-  //   try {
-  //     if (modalMode === 'add') {
-  //       await createDeal(dealData as Omit<Deal, 'id' | 'createdAt' | 'updatedAt'>);
-  //       toast({
-  //         title: t('deals.saveSuccess'),
-  //         description: t('deals.addSuccess'),
-  //       });
-  //     } else {
-  //       const id = (dealData as Deal).id;
-  //       await updateDeal(id, dealData as Partial<Omit<Deal, 'id' | 'createdAt' | 'updatedAt'>>);
-  //       toast({
-  //         title: t('deals.saveSuccess'),
-  //         description: t('deals.updateSuccess'),
-  //       });
-  //     }c
-  //     setIsModalOpen(false);
-  //     fetchDeals(currentPage);
-  //   } catch (error) {
-  //     console.error('Failed to save deal:', error);
-  //     toast({
-  //       title: t('deals.saveError'),
-  //       description: t('common.tryAgain'),
-  //       variant: 'destructive',
-  //     });
-  //   }
-  // };
 
   const handleAddCustomer = () => {
     setSelectedCustomer(null);
@@ -592,8 +508,8 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
               setSearchTerm={setSearchTerm}
               statusFilter={statusFilter}
               setStatusFilter={setStatusFilter}
-              currentPage={currentPage}
-              totalPages={totalPages}
+              currentPage={customerCurrentPage}
+              totalPages={customerTatalPage}
               fetchCustomers={fetchCustomers}
               handleAddCustomer={handleAddCustomer}
               handleEditCustomer={handleEditCustomer}
@@ -608,8 +524,8 @@ export default function CRMDashboard({ onLogout }: CRMDashboardProps) {
               dealsError={dealsError}
               dealStatusFilter={dealStatusFilter}
               setDealStatusFilter={setDealStatusFilter}
-              currentPage={currentPage}
-              totalPages={totalPages}
+              currentPage={dealCurrentPage}
+              totalPages={dealTotalPage}
               fetchDeals={fetchDeals}
               handleAddDeal={handleAddDeal}
               handleEditDeal={handleEditDeal}

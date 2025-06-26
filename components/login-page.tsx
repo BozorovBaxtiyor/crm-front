@@ -116,7 +116,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             </Button>
           </form>
 
-          <div className="mt-6 p-4 bg-gray-50 dark:bg-[#1e1e2d] rounded-lg">
+          {/* <div className="mt-6 p-4 bg-gray-50 dark:bg-[#1e1e2d] rounded-lg">
             <p className="text-sm text-gray-600 dark:text-gray-300 font-medium mb-2">
               {t('login.demo')}
             </p>
@@ -124,7 +124,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             <p className="text-xs text-gray-500 dark:text-gray-400">
               {t('login.password')}: StrongPassword
             </p>
-          </div>
+          </div> */}
         </CardContent>
       </Card>
     </div>
